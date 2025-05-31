@@ -12,8 +12,8 @@ _=(e,t,f,s)=>$(e).addEventListener(t,s?x=>{x.target.matches(s)&&f(x)}:f)
 
 ~63 bytes gzip
 
-# Optionals
-```
+## Optional parts:
+```js
 $$=document.querySelectorAll.bind(document)
 ```
 
