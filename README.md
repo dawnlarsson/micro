@@ -94,3 +94,76 @@ _('#container', 'click', e => {
 
 $('#container').innerHTML += '<button data-id="3">Item 3</button>'
 ```
+
+### Form validation
+
+```html
+<input id="email" type="email" placeholder="Email">
+<button id="submit">Submit</button>
+<div id="status"></div>
+```
+
+```js
+const form = P({ email: '', valid: false }, () => {
+  form.valid = /\S+@\S+\.\S+/.test(form.email)
+  $('#submit').disabled = !form.valid
+  H('#status', form.valid ? '✓ valid' : 'invalid email')
+})
+
+_('#email', 'input', e => form.email = e.target.value)
+```
+
+### Shopping cart
+```html
+<button onclick="addToCart('Coffee', 5)">Add Coffee $5</button>
+<button onclick="addToCart('Tea', 3)">Add Tea $3</button>
+<div id="cart"></div>
+```
+
+```js
+const cart = P({ items: [], total: 0 }, () => {
+  cart.total = cart.items.reduce((sum, item) => sum + item.price, 0)
+  
+  H('#cart', `
+    ${cart.items.map(item => `<div>${item.name} - $${item.price}</div>`).join('')}
+    <div><strong>Total: $${cart.total}</strong></div>
+  `)
+})
+
+window.addToCart = (name, price) => {
+  cart.items = [...cart.items, { name, price }]
+}
+```
+
+### Tabs
+```html
+<div id="tabs">
+  <button class="tab active" data-tab="home">Home</button>
+  <button class="tab" data-tab="about">About</button>
+  <button class="tab" data-tab="contact">Contact</button>
+</div>
+<div id="content"></div>
+```
+
+```js
+const content = {
+  home: '<h2>Welcome Home</h2>',
+  about: '<h2>About Us</h2>',
+  contact: '<h2>Contact Info</h2>'
+}
+
+const tabs = P({ active: 'home' }, () => {
+  H('#content', content[tabs.active])
+  
+  $$('.tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === tabs.active)
+  })
+})
+
+_('#tabs', 'click', e => {
+  if (e.target.dataset.tab) {
+    tabs.active = e.target.dataset.tab
+  }
+}, '.tab')
+
+```
