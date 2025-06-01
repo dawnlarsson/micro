@@ -53,7 +53,7 @@ const input = select('todo');
 
 const todos = bind({ list: [] }, () => {
         html('tasks', todos.list.map((task, i) =>
-                `<li>${task} <button class="remove-btn" onclick="removeTask(${i})">×</button></li>`
+                `<li>${task} <button task="${i}">×</button></li>`
         ).join(''));
 });
 
@@ -64,11 +64,17 @@ on('click', 'add', () => {
 
 on('keypress', 'todo', (e) => {
         if (e.key !== 'Enter') return;
+
         todos.list = [...todos.list, input.value];
         input.value = '';
 });
 
-window.removeTask = (i) => todos.list = todos.list.filter((_, idx) => idx !== i);
+on('click', 'tasks', (e) => {
+        if (!e.target.matches('[task]')) return;
+        todos.list = todos.list.filter(
+                (_, idx) => idx !== parseInt(e.target.getAttribute('task'))
+        );
+}, '[task]');
 ```
 
 Minified JS: **582 bytes**
