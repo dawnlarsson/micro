@@ -77,7 +77,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **582 bytes**
+Minified JS: **636 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
