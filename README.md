@@ -23,17 +23,12 @@ const on = (target: string, at: string, handler: (event: Event) => void, delegat
 
 const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = []): void => {
         var input = select(target) as HTMLInputElement;
-        var sanitize = (text: string): string => text.value.replace(/[<>&"']/g, (char) => ({
+        var sanitize = (text: any): string => text.value.replace(/[<>&"']/g, (char) => ({
                 '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;'
         }[char] || char)).trim();
-
         on('input', target, () => { var text = sanitize(input); if (text) call(text, false) });
-        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = call(input); if (text) call(text, true) });
-
-        selects.forEach(selector => on('click', selector, () => {
-                const text = sanitize(input);
-                if (text) call(text, true);
-        }));
+        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = sanitize(input); if (text) call(text, true) });
+        selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (text) call(text, true); }));
 };
 ```
 
