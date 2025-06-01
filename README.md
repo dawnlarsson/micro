@@ -16,31 +16,23 @@ const bind = <T extends Record<string, any>>(obj: T, render: () => void): T => n
 })
 
 const on = (target: string, at: string, handler: (event: Event) => void, delegation?: string): void => {
-        select(at).addEventListener(target, delegation ? (event: Event) => {
-                if ((event.target as HTMLElement)?.matches(delegation)) { handler(event) }
+        select(at).addEventListener(target, delegation ? (e: Event) => {
+                if ((e.target as HTMLElement)?.matches(delegation)) { handler(e) }
         } : handler)
 }
 
-const field = (inputSelector: string, callback: (text: string, submit: boolean) => void, selects: string[] = []): void => {
-        const input = select(inputSelector) as HTMLInputElement;
-        const sanitize = (text: string): string => text.replace(/[<>&"']/g, (char) => ({
+const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = []): void => {
+        var input = select(target) as HTMLInputElement;
+        var sanitize = (text: string): string => text.value.replace(/[<>&"']/g, (char) => ({
                 '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;'
-        }[char] || char));
+        }[char] || char)).trim();
 
-        on('input', inputSelector, () => {
-                const text = sanitize(input.value.trim());
-                if (text) callback(text, false);
-        });
-
-        on('keypress', inputSelector, (e) => {
-                if (e.key !== 'Enter') return;
-                const text = sanitize(input.value.trim());
-                if (text) callback(text, true);
-        });
+        on('input', target, () => { var text = sanitize(input); if (text) call(text, false) });
+        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = call(input); if (text) call(text, true) });
 
         selects.forEach(selector => on('click', selector, () => {
-                const text = sanitize(input.value.trim());
-                if (text) callback(text, true);
+                const text = sanitize(input);
+                if (text) call(text, true);
         }));
 };
 ```
@@ -95,7 +87,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **896 bytes**
+Minified JS: **870 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
