@@ -21,14 +21,14 @@ const on = (target: string, at: string, handler: (event: Event) => void, delegat
         } : handler)
 }
 
-const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = []): void => {
+const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = [], allow_empty: boolean = false): void => {
         var input = select(target) as HTMLInputElement;
         var sanitize = (text: any): string => text.value.replace(/[<>&"']/g, (char) => ({
                 '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;'
         }[char] || char)).trim();
-        on('input', target, () => { var text = sanitize(input); if (text) call(text, false) });
-        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = sanitize(input); if (text) call(text, true) });
-        selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (text) call(text, true); }));
+        on('input', target, () => { var text = sanitize(input); if (allow_empty || text) call(text, false) });
+        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = sanitize(input); if (allow_empty || text) call(text, true) });
+        selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (allow_empty || text) call(text, true); }));
 };
 ```
 
@@ -82,7 +82,28 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **870 bytes**
+Minified JS: **884 bytes**
+
+#### Search
+```html
+<input search placeholder="Search...">
+<div results></div>
+```
+
+```ts
+const data = ['Apple', 'Banana', 'Cherry', 'Kiwi'];
+const search = bind({ results: data }, () => {
+        html('results', search.results.map(r => `<div>${r}</div>`).join(''));
+});
+
+field("search", (text) => {
+        search.results = data.filter(item =>
+                item.toLowerCase().includes(text.toLowerCase())
+        );
+}, [], true);
+```
+
+Minified JS: **762 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
