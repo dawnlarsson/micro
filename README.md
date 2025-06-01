@@ -1,5 +1,8 @@
 # Micro V2
-Typescript and html attributes version for more semantic DX / HTML
+**Super tiny** "reactive framework", no build systems, no bs.
+
+V2: Typescript and html attributes version for a more semantic DX / HTML
+V1: Pure minified JS
 
 copy and past the entire framework:
 ```ts
