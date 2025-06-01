@@ -20,6 +20,29 @@ const on = (target: string, at: string, handler: (event: Event) => void, delegat
                 if ((event.target as HTMLElement)?.matches(delegation)) { handler(event) }
         } : handler)
 }
+
+const field = (inputSelector: string, callback: (text: string, submit: boolean) => void, selects: string[] = []): void => {
+        const input = select(inputSelector) as HTMLInputElement;
+        const sanitize = (text: string): string => text.replace(/[<>&"']/g, (char) => ({
+                '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;'
+        }[char] || char));
+
+        on('input', inputSelector, () => {
+                const text = input.value.trim();
+                if (text) callback(text, false);
+        });
+
+        on('keypress', inputSelector, (e) => {
+                if (e.key !== 'Enter') return;
+                const text = input.value.trim();
+                if (text) callback(text, true);
+        });
+
+        selects.forEach(selector => on('click', selector, () => {
+                const text = input.value.trim();
+                if (text) callback(text, true);
+        }));
+};
 ```
 
 ## Examples
@@ -42,6 +65,7 @@ on('click', 'less', () => counter.count -= 1);
 Minified JS: **323 bytes**
 
 #### Todo list
+with input sanitization (XSS prevention)
 ```html
 <input todo placeholder="Add task...">
 <button add>Add</button>
@@ -49,27 +73,19 @@ Minified JS: **323 bytes**
 ```
 
 ```ts
-const input = select('todo');
-
 const todos = bind({ list: [] }, () => {
         html('tasks', todos.list.map((task, i) =>
                 `<li>${task} <button task="${i}">×</button></li>`
         ).join(''));
 });
 
-on('click', 'add', () => {
-        if (!input.value.trim()) return;
-        todos.list = [...todos.list, input.value];
-        input.value = '';
-});
+field("todo", (text, submit) => {
+        if (!submit) return;
 
-on('keypress', 'todo', (e) => {
-        if (e.key !== 'Enter') return;
-        if (!input.value.trim()) return;
+        todos.list = [...todos.list, text];
+        select('todo').value = '';
 
-        todos.list = [...todos.list, input.value];
-        input.value = '';
-});
+}, ["add"]);
 
 on('click', 'tasks', (e) => {
         if (!e.target.matches('[task]')) return;
@@ -79,7 +95,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **688 bytes**
+Minified JS: **887 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
