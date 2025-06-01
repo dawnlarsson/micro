@@ -28,18 +28,18 @@ const field = (inputSelector: string, callback: (text: string, submit: boolean) 
         }[char] || char));
 
         on('input', inputSelector, () => {
-                const text = input.value.trim();
+                const text = sanitize(input.value.trim());
                 if (text) callback(text, false);
         });
 
         on('keypress', inputSelector, (e) => {
                 if (e.key !== 'Enter') return;
-                const text = input.value.trim();
+                const text = sanitize(input.value.trim());
                 if (text) callback(text, true);
         });
 
         selects.forEach(selector => on('click', selector, () => {
-                const text = input.value.trim();
+                const text = sanitize(input.value.trim());
                 if (text) callback(text, true);
         }));
 };
@@ -95,7 +95,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **887 bytes**
+Minified JS: **896 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
