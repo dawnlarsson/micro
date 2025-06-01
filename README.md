@@ -58,12 +58,14 @@ const todos = bind({ list: [] }, () => {
 });
 
 on('click', 'add', () => {
+        if (!input.value.trim()) return;
         todos.list = [...todos.list, input.value];
         input.value = '';
 });
 
 on('keypress', 'todo', (e) => {
         if (e.key !== 'Enter') return;
+        if (!input.value.trim()) return;
 
         todos.list = [...todos.list, input.value];
         input.value = '';
@@ -77,7 +79,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **636 bytes**
+Minified JS: **688 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
