@@ -5,7 +5,7 @@ V2: Typescript and html attributes version for a more semantic DX / HTML
 
 V1: Pure minified JS
 
-copy and past the entire framework:
+copy and paste the entire framework:
 ```ts
 const select = (at: string) => document.querySelector(`[${at}]`) as HTMLElement;
 const selectAll = (at: string) => document.querySelectorAll(`[${at}]`)
@@ -45,8 +45,8 @@ const counter = bind({ count: 0 }, () => {
         html('count', counter.count)
 });
 
-on('click', 'more', () => counter.count += 1);
-on('click', 'less', () => counter.count -= 1);
+on('click', 'more', () => counter.count++);
+on('click', 'less', () => counter.count--);
 ```
 
 Minified JS: **323 bytes**
