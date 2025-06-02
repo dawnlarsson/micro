@@ -134,11 +134,11 @@ const set_post = (p) => { post = p };
 export { go, page, pages, set_post };
 ```
 
-#### use
+## Examples
 
 #### SPA router only
 404 is baked in by deafult
-```
+```ts
 import { page, go } from "./micro.ts";
 
 page('/', 'Home', () => { return `<a href="/about">about</a>`; });
