@@ -135,6 +135,20 @@ export { go, page, pages, set_post };
 ```
 
 #### use
+
+#### SPA router only
+404 is baked in by deafult
+```
+import { page, go } from "./micro.ts";
+
+page('/', 'Home', () => { return `<a href="/about">about</a>`; });
+page('/about', 'about', () => { return `<a href="/">home</a>`; });
+
+go();
+```
+Minified JS: **629 bytes**
+
+#### SPA router + Micro
 ```ts
 page('/', 'Home', () => {
         return `<h1>Welcome to the Home Page</h1><p>This is the main page of our application.</p><p count>0</p><button more>+</button><button less>-</button>`;
