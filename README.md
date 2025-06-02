@@ -17,6 +17,8 @@ V1: Pure minified JS
 ```
 
 ```ts
+import { bind, html, on } from "./micro.ts";
+
 const counter = bind({ count: 0 }, () => {
         html('count', counter.count)
 });
@@ -69,6 +71,8 @@ with input sanitization (XSS prevention)
 ```
 
 ```ts
+import { field, select, bind, html, on } from "./micro.ts";
+
 const todos = bind({ list: [] }, () => {
         html('tasks', todos.list.map((task, i) =>
                 `<li>${task} <button task="${i}">×</button></li>`
@@ -91,7 +95,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **888 bytes**
+Minified JS: **892 bytes** *without router, todo fix inline bug
 
 #### Search
 ```html
@@ -100,6 +104,8 @@ Minified JS: **888 bytes**
 ```
 
 ```ts
+import { field, bind, html } from "./micro.ts";
+
 const data = ['Apple', 'Banana', 'Cherry', 'Kiwi'];
 const search = bind({ results: data }, () => {
         html('results', search.results.map(r => `<div>${r}</div>`).join(''));
@@ -112,7 +118,7 @@ field("search", (text) => {
 }, [], true);
 ```
 
-Minified JS: **766 bytes**
+Minified JS: **770 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
