@@ -48,8 +48,6 @@ const page = (url: string, title: string, render: () => string, postRender?: () 
         pages[url] = [title, render, postRender || (() => { })];
 };
 
-const set_post = (p) => {
-        post = p
-};
-
+const set_post = (p) => { post = p };
+page('*', '404', () => { return `404 Not Found <a href="/">Back</a>`; });
 export { go, on, bind, html, select, selectAll, field, page, pages, set_post };
