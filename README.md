@@ -114,8 +114,8 @@ const go = (url: string | void): void => {
         var page = pages[url] || pages['*'];
         doc.title = page[0];
         doc.body.innerHTML = page[1]();
-        post(page);
         page[2]?.();
+        post(page);
 }
 addEventListener('popstate', () => go(location.pathname));
 addEventListener('click', (e) => {
@@ -124,30 +124,21 @@ addEventListener('click', (e) => {
         e.preventDefault();
         go(link.pathname);
 });
+
+const page = (url: string, title: string, render: () => string, postRender?: () => void): void => {
+        pages[url] = [title, render, postRender || (() => { })];
+};
 ```
 
 #### use
 ```ts
-pages['/'] = [
-        'home',
-        () => `<h1>Welcome to the Home Page</h1>
-<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p>This is the home page content.</p><p count>0</p><button more>+</button><button less>-</button>`,
-        () => { }
-];
-pages['/about'] = [
-        'about',
-        () => `<h1>About Us</h1>
-<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p>This is the about page content.</p><p count>0</p><button more>+</button><button less>-</button>`,
-        () => { }
-];
-pages['*'] = [
-        '404',
-        () => `<h1>Page Not Found</h1>
-<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p count>0</p><button more>+</button><button less>-</button>`,
-        () => { }
-];
+page('/', 'Home', () => {
+        return `<h1>Welcome to the Home Page</h1><p>This is the main page of our application.</p><p count>0</p><button more>+</button><button less>-</button>`;
+});
 
-go();
+page('*', '404 Not Found', () => {
+        return `<h1>404 Not Found</h1><p>The page you are looking for does not exist.</p>`;
+});
 
 post = (page: [string, () => void, () => void]) => {
         const counter = bind({ count: 0 }, () => {
@@ -156,6 +147,8 @@ post = (page: [string, () => void, () => void]) => {
         on('click', 'more', () => counter.count++);
         on('click', 'less', () => counter.count--);
 }
+
+go()
 ```
 
 ## Micro v1 pure JS
