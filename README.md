@@ -1,35 +1,13 @@
 # Micro V2
 **Super tiny** "reactive framework", no build systems, no bs.
 
-V2: Typescript and html attributes version for a more semantic DX / HTML
+V2: Typescript & html attributes
+- SPA router (Client-side Routing)
+- Reactive state & events
+- Semantic HTML & JS DX
 
 V1: Pure minified JS
 
-copy and paste the entire framework:
-```ts
-const doc = document as Document & {}
-const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
-const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
-const html = (at: string, content: any): void => { select(at).innerHTML = content }
-const bind = <T extends Record<string, any>>(obj: T, render: () => void): T => new Proxy(obj, {
-        set: (target, key, value) => { target[key as keyof T] = value; render(); return true }
-})
-const on = (target: string, at: string, handler: (event: Event) => void, delegation?: string): void => {
-        select(at).addEventListener(target, delegation ? (e: Event) => {
-                if ((e.target as HTMLElement)?.matches(delegation)) { handler(e) }
-        } : handler)
-}
-const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = [], allow_empty: boolean = false): void => {
-        var input = select(target) as HTMLInputElement;
-        var sanitize = (text: any): string => text.value.replace(/[<>&"']/g, (char) => ({
-                '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;'
-        }[char] || char)).trim();
-        on('input', target, () => { var text = sanitize(input); if (allow_empty || text) call(text, false) });
-        on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = sanitize(input); if (allow_empty || text) call(text, true) });
-        selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (allow_empty || text) call(text, true); }));
-};
-export { on, bind, html, select, selectAll, field };
-```
 ## Examples
 #### Counter
 ```html
@@ -48,6 +26,39 @@ on('click', 'less', () => counter.count--);
 ```
 
 Minified JS: **329 bytes**
+
+#### SPA router only
+404 is baked in by deafult
+```ts
+import { page, go } from "./micro.ts";
+
+page('/', 'Home', () => { return `<a href="/about">about</a>`; });
+page('/about', 'about', () => { return `<a href="/">home</a>`; });
+
+go();
+```
+Minified JS: **629 bytes**
+
+#### SPA router + Micro
+```ts
+import { page, go, bind, html, set_post, on } from "./micro.ts";
+
+page('/', 'Home', () => {
+        return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
+});
+
+set_post((page: [string, () => void, () => void]) => {
+        const counter = bind({ count: 0 }, () => {
+                html('count', counter.count);
+        });
+        on('click', 'more', () => counter.count++);
+        on('click', 'less', () => counter.count--);
+});
+
+go()
+```
+
+Minified JS: **992 bytes**
 
 #### Todo list
 with input sanitization (XSS prevention)
@@ -102,72 +113,6 @@ field("search", (text) => {
 ```
 
 Minified JS: **766 bytes**
-
-## SPA Extension (wip)
-```ts
-var pages: Record<string, [string, () => string, () => void]> = {};
-var post = (page: [string, () => void, () => void]) => { };
-const go = (url: string | void): void => {
-        if (!url) url = location.pathname;
-        const newBody = doc.body.cloneNode(false) as HTMLBodyElement;
-        doc.body.parentNode?.replaceChild(newBody, doc.body);
-        history.pushState(null, '', url);
-        var page = pages[url] || pages['*'];
-        doc.title = page[0];
-        doc.body.innerHTML = page[1]();
-        page[2]?.();
-        post(page);
-}
-addEventListener('popstate', () => go(location.pathname));
-addEventListener('click', (e) => {
-        const link = (e.target as HTMLElement)?.closest('a[href^="/"]') as HTMLAnchorElement;
-        if (!link) return;
-        e.preventDefault();
-        go(link.pathname);
-});
-const page = (url: string, title: string, render: () => string, postRender?: () => void): void => {
-        pages[url] = [title, render, postRender || (() => { })];
-};
-page('*', '404', () => { return `404 Not Found <a href="/">Back</a>`; });
-
-const set_post = (p) => { post = p };
-export { go, page, pages, set_post };
-```
-
-## Examples
-
-#### SPA router only
-404 is baked in by deafult
-```ts
-import { page, go } from "./micro.ts";
-
-page('/', 'Home', () => { return `<a href="/about">about</a>`; });
-page('/about', 'about', () => { return `<a href="/">home</a>`; });
-
-go();
-```
-Minified JS: **629 bytes**
-
-#### SPA router + Micro
-```ts
-import { page, go, bind, html, set_post, on } from "./micro.ts";
-
-page('/', 'Home', () => {
-        return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
-});
-
-set_post((page: [string, () => void, () => void]) => {
-        const counter = bind({ count: 0 }, () => {
-                html('count', counter.count);
-        });
-        on('click', 'more', () => counter.count++);
-        on('click', 'less', () => counter.count--);
-});
-
-go()
-```
-
-Minified JS: **992 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
