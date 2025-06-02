@@ -150,26 +150,24 @@ Minified JS: **629 bytes**
 
 #### SPA router + Micro
 ```ts
+import { page, go, bind, html, set_post, on } from "./micro.ts";
+
 page('/', 'Home', () => {
-        return `<h1>Welcome to the Home Page</h1><p>This is the main page of our application.</p><p count>0</p><button more>+</button><button less>-</button>`;
+        return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
 });
 
-page('*', '404 Not Found', () => {
-        return `<h1>404 Not Found</h1><p>The page you are looking for does not exist.</p>`;
-});
-
-post = (page: [string, () => void, () => void]) => {
+set_post((page: [string, () => void, () => void]) => {
         const counter = bind({ count: 0 }, () => {
                 html('count', counter.count);
         });
         on('click', 'more', () => counter.count++);
         on('click', 'less', () => counter.count--);
-}
+});
 
 go()
 ```
 
-Minified JS: **1060 bytes**
+Minified JS: **992 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
