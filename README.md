@@ -28,6 +28,7 @@ const field = (target: string, call: (text: string, submit: boolean) => void, se
         on('keypress', target, (e) => { if (e.key !== 'Enter') return; var text = sanitize(input); if (allow_empty || text) call(text, true) });
         selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (allow_empty || text) call(text, true); }));
 };
+export { on, bind, html, select, selectAll, field };
 ```
 ## Examples
 #### Counter
@@ -124,9 +125,19 @@ addEventListener('click', (e) => {
         e.preventDefault();
         go(link.pathname);
 });
+
 const page = (url: string, title: string, render: () => string, postRender?: () => void): void => {
         pages[url] = [title, render, postRender || (() => { })];
 };
+
+const set_post = (p) => {
+        post = p
+};
+
+page('*', '404', () => { return `404 Not Found <a href="/">Back</a>`; });
+
+const set_post = (p) => { post = p };
+export { go, page, pages, set_post };
 ```
 
 #### use
