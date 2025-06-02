@@ -104,7 +104,7 @@ Minified JS: **766 bytes**
 
 ## SPA Extension (wip)
 ```ts
-var pages: Record<string, [string, () => void, () => void]> = {};
+var pages: Record<string, [string, () => string, () => void]> = {};
 var post = (page: [string, () => void, () => void]) => { };
 const go = (url: string | void): void => {
         if (!url) url = location.pathname;
@@ -124,7 +124,6 @@ addEventListener('click', (e) => {
         e.preventDefault();
         go(link.pathname);
 });
-
 const page = (url: string, title: string, render: () => string, postRender?: () => void): void => {
         pages[url] = [title, render, postRender || (() => { })];
 };
@@ -150,6 +149,8 @@ post = (page: [string, () => void, () => void]) => {
 
 go()
 ```
+
+Minified JS: **1060 bytes**
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
