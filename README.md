@@ -7,20 +7,18 @@ V1: Pure minified JS
 
 copy and paste the entire framework:
 ```ts
-const select = (at: string) => document.querySelector(`[${at}]`) as HTMLElement;
-const selectAll = (at: string) => document.querySelectorAll(`[${at}]`)
+const doc = document as Document & {}
+const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
+const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
 const html = (at: string, content: any): void => { select(at).innerHTML = content }
-
 const bind = <T extends Record<string, any>>(obj: T, render: () => void): T => new Proxy(obj, {
         set: (target, key, value) => { target[key as keyof T] = value; render(); return true }
 })
-
 const on = (target: string, at: string, handler: (event: Event) => void, delegation?: string): void => {
         select(at).addEventListener(target, delegation ? (e: Event) => {
                 if ((e.target as HTMLElement)?.matches(delegation)) { handler(e) }
         } : handler)
 }
-
 const field = (target: string, call: (text: string, submit: boolean) => void, selects: string[] = [], allow_empty: boolean = false): void => {
         var input = select(target) as HTMLInputElement;
         var sanitize = (text: any): string => text.value.replace(/[<>&"']/g, (char) => ({
@@ -31,7 +29,6 @@ const field = (target: string, call: (text: string, submit: boolean) => void, se
         selects.forEach(selector => on('click', selector, () => { var text = sanitize(input); if (allow_empty || text) call(text, true); }));
 };
 ```
-
 ## Examples
 #### Counter
 ```html
@@ -49,7 +46,7 @@ on('click', 'more', () => counter.count++);
 on('click', 'less', () => counter.count--);
 ```
 
-Minified JS: **323 bytes**
+Minified JS: **329 bytes**
 
 #### Todo list
 with input sanitization (XSS prevention)
@@ -82,7 +79,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **884 bytes**
+Minified JS: **888 bytes**
 
 #### Search
 ```html
@@ -103,7 +100,63 @@ field("search", (text) => {
 }, [], true);
 ```
 
-Minified JS: **762 bytes**
+Minified JS: **766 bytes**
+
+## SPA Extension (wip)
+```ts
+var pages: Record<string, [string, () => void, () => void]> = {};
+var post = (page: [string, () => void, () => void]) => { };
+const go = (url: string | void): void => {
+        if (!url) url = location.pathname;
+        const newBody = doc.body.cloneNode(false) as HTMLBodyElement;
+        doc.body.parentNode?.replaceChild(newBody, doc.body);
+        history.pushState(null, '', url);
+        var page = pages[url] || pages['*'];
+        doc.title = page[0];
+        doc.body.innerHTML = page[1]();
+        post(page);
+        page[2]?.();
+}
+addEventListener('popstate', () => go(location.pathname));
+addEventListener('click', (e) => {
+        const link = (e.target as HTMLElement)?.closest('a[href^="/"]') as HTMLAnchorElement;
+        if (!link) return;
+        e.preventDefault();
+        go(link.pathname);
+});
+```
+
+#### use
+```ts
+pages['/'] = [
+        'home',
+        () => `<h1>Welcome to the Home Page</h1>
+<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p>This is the home page content.</p><p count>0</p><button more>+</button><button less>-</button>`,
+        () => { }
+];
+pages['/about'] = [
+        'about',
+        () => `<h1>About Us</h1>
+<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p>This is the about page content.</p><p count>0</p><button more>+</button><button less>-</button>`,
+        () => { }
+];
+pages['*'] = [
+        '404',
+        () => `<h1>Page Not Found</h1>
+<a href="/">Home</a><a href="/about">Go to About</a><a href="/not-found">Go to Not Found</a><hr><p count>0</p><button more>+</button><button less>-</button>`,
+        () => { }
+];
+
+go();
+
+post = (page: [string, () => void, () => void]) => {
+        const counter = bind({ count: 0 }, () => {
+                html('count', counter.count);
+        });
+        on('click', 'more', () => counter.count++);
+        on('click', 'less', () => counter.count--);
+}
+```
 
 ## Micro v1 pure JS
 Super tiny client side js "framework"
@@ -114,6 +167,7 @@ H=(e,h)=>($(e).innerHTML=h)
 _=(e,t,f,s)=>$(e).addEventListener(t,s?x=>{x.target.matches(s)&&f(x)}:f)
 ```
 211 bytes ~63 bytes gzip
+
 
 #### Optional:
 ```js
