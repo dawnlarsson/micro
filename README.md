@@ -125,15 +125,9 @@ addEventListener('click', (e) => {
         e.preventDefault();
         go(link.pathname);
 });
-
 const page = (url: string, title: string, render: () => string, postRender?: () => void): void => {
         pages[url] = [title, render, postRender || (() => { })];
 };
-
-const set_post = (p) => {
-        post = p
-};
-
 page('*', '404', () => { return `404 Not Found <a href="/">Back</a>`; });
 
 const set_post = (p) => { post = p };
