@@ -1,0 +1,13 @@
+name = "micro-cf"
+main = "worker/worker.ts"
+compatibility_date = "2025-06-03"
+
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+
+[observability]
+enabled = true
+
+[build]
+command = "bun bun src/index.html --minify --outdir public --target browser"

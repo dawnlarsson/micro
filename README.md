@@ -41,6 +41,22 @@ go();
 ```
 Minified JS: **601 bytes**
 
+## Micro SPA + Cloudflare Workers
+`micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
+live example: https://micro-cf.dawnday.workers.dev/
+
+usage:
+```
+cd micro-cf
+bun i
+bun run start
+```
+
+deploy
+```
+bun run deploy
+```
+
 #### SPA router + Micro
 ```ts
 import { page, go, bind, html, on_start, on } from "./micro.ts";
