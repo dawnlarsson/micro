@@ -1,5 +1,5 @@
 # Micro V2
-**Super tiny** "reactive framework", no build systems, no bs.
+Single file **Super tiny** "reactive framework", no build systems, no bs.
 
 V2: Typescript & html attributes
 - SPA router (Client-side Routing)
@@ -30,7 +30,7 @@ on('click', 'less', () => counter.count--);
 Minified JS: **329 bytes**
 
 #### SPA router only
-404 is baked in by deafult
+404 is baked in by default
 ```ts
 import { page, go } from "./micro.ts";
 
@@ -39,17 +39,17 @@ page('/about', 'about', () => { return `<a href="/">home</a>`; });
 
 go();
 ```
-Minified JS: **629 bytes**
+Minified JS: **610 bytes**
 
 #### SPA router + Micro
 ```ts
-import { page, go, bind, html, set_post, on } from "./micro.ts";
+import { page, go, bind, html, on_start, on } from "./micro.ts";
 
 page('/', 'Home', () => {
         return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
 });
 
-set_post((page: [string, () => void, () => void]) => {
+on_start((page: [string, () => void, () => void]) => {
         const counter = bind({ count: 0 }, () => {
                 html('count', counter.count);
         });
@@ -60,7 +60,7 @@ set_post((page: [string, () => void, () => void]) => {
 go()
 ```
 
-Minified JS: **992 bytes**
+Minified JS: **969 bytes**
 
 #### Todo list
 with input sanitization (XSS prevention)
@@ -95,7 +95,7 @@ on('click', 'tasks', (e) => {
 }, '[task]');
 ```
 
-Minified JS: **892 bytes** *without router, todo fix inline bug
+Minified JS: **892 bytes**
 
 #### Search
 ```html
