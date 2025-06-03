@@ -10,4 +10,4 @@ not_found_handling = "single-page-application"
 enabled = true
 
 [build]
-command = "bun bun src/index.html --minify --outdir public --target browser"
+command = "bun bun src/index.html --minify --outdir public --target browser --chunk-naming=[name].[ext]"
