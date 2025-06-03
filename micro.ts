@@ -1,5 +1,5 @@
 // Micro
-export const doc = document as Document & {}
+const doc = document as Document & {}
 export const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
 export const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
 export const html = (at: string, content: any): void => { select(at).innerHTML = content }
@@ -36,9 +36,9 @@ export const go = (url: string | void): void => {
         if (!url) url = location.pathname;
         const newBody = doc.body.cloneNode(false) as HTMLBodyElement;
         doc.body.parentNode?.replaceChild(newBody, doc.body);
-        history.pushState(null, '', url);
+        history.pushState(0, '', url);
         if (!router_initialized) {
-                addEventListener('popstate', () => go());
+                addEventListener('popstate', go);
                 addEventListener('click', (e) => {
                         const link = (e.target as HTMLElement)?.closest('a[href^="/"]') as HTMLAnchorElement;
                         if (!link) return;

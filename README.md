@@ -39,7 +39,7 @@ page('/about', 'about', () => { return `<a href="/">home</a>`; });
 
 go();
 ```
-Minified JS: **610 bytes**
+Minified JS: **601 bytes**
 
 #### SPA router + Micro
 ```ts
@@ -49,7 +49,7 @@ page('/', 'Home', () => {
         return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
 });
 
-on_start((page: [string, () => void, () => void]) => {
+on_start(() => {
         const counter = bind({ count: 0 }, () => {
                 html('count', counter.count);
         });
@@ -60,7 +60,7 @@ on_start((page: [string, () => void, () => void]) => {
 go()
 ```
 
-Minified JS: **969 bytes**
+Minified JS: **959 bytes**
 
 #### Todo list
 with input sanitization (XSS prevention)
