@@ -28,7 +28,7 @@ export const page = (url: string, title: string, render: () => string, postRende
         routes[url] = [title, render, postRender || null];
 };
 
-addEventListener('popstate', route);
+addEventListener('popstate', () => route());
 addEventListener('click', e => {
         const link = (e.target as HTMLElement)?.closest('a[href^="/"]');
         if (link) {

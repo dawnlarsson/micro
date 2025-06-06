@@ -69,7 +69,7 @@ page('/about', 'About', () => `<a href="/">Home</a>`);
 
 route();
 ```
-Minified JS: **468 bytes**
+Minified JS: **478 bytes**
 
 ### SPA router + Micro
 ```ts
@@ -97,7 +97,7 @@ page('/',
 route();
 ```
 
-Minified JS: **844 bytes**
+Minified JS: **849 bytes**
 
 ## Micro SPA + Cloudflare Workers
 `micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
