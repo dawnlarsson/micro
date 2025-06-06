@@ -19,6 +19,8 @@ given it's tiny size, it's far more worth it than a second request overhead
 >
 > V3 beta is currently harder to use, I want a more intuitive developer experience and API refinements,
 > but this **should be the MIN / MAX for size and speed.** (To my current knowledge)
+>
+> p.s. Forgive me if there’s a tiny bug somewhere, been re-writing V3 during the peek of a cold chugging aspirin lol
 
 ## V2 -> V3
 V3 Events core is 177 bytes
