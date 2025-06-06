@@ -6,6 +6,9 @@ the **only** thing you pay for its they types you register.
 near zero memory cost, near zero CPU cost.
 and ZERO entirely for dom elements.
 
+V3 Is ideal for being inlined script on the first request,
+given it's tiny size, it's far more worth it than a second request overhead
+
 > [!IMPORTANT]
 > ### Beta status
 > This is currently my state of the art research on web reactivity,
