@@ -1,4 +1,9 @@
 ![Dawning Micro](https://github.com/user-attachments/assets/bfb7f83d-2949-4ff2-8ae3-d812ff726209)
+
+<div align=center>
+
+  ```npm i @dawning-org/micro```
+</div><br>
 Ultra tiny and fast reactivity. <br>
 V3 is a document wide event handler, 
 the **only** thing you pay for is the types you register.
