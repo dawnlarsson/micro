@@ -2,7 +2,8 @@
 ultra tiny and fast reactivity.
 
 V3 is a document wide event handler, 
-the **only** thing you pay for its they types you register.
+the **only** thing you pay for is the types you register.
+
 near zero memory cost, near zero CPU cost.
 and ZERO entirely for dom elements.
 
