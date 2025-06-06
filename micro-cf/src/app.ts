@@ -6,11 +6,11 @@ var counter;
 var count = 0;
 
 type('more', [click], () => {
-        text(counter, count++);
+        text(counter, ++count);
 });
 
 type('less', [click], () => {
-        text(counter, count--);
+        text(counter, --count);
 });
 
 page('/', 'Home', () => {
