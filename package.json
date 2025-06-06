@@ -1,0 +1,30 @@
+{
+  "name": "@dawning-org/micro",
+  "version": "3.0.0-beta.1",
+  "description": "ultra tiny and fast reactive framework",
+  "homepage": "https://github.com/dawnlarsson/micro",
+  "author": "Dawn Larsson",
+  "bugs": {
+    "url": "https://github.com/dawnlarsson/micro/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawnlarsson/micro.git"
+  },
+  "keywords": [
+    "micro",
+    "framework",
+    "reactive",
+    "tiny",
+    "fast",
+    "blazingly fast"
+  ],
+  "license": "Apache-2.0",
+  "main": "micro.ts",
+  "files": [
+    "micro.ts",
+    "router.ts",
+    "README.md",
+    "LICENSE"
+  ]
+}
