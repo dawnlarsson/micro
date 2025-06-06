@@ -1,10 +1,9 @@
-# Micro V3 Beta
-ultra tiny and fast reactivity.
-
+![Dawning Micro](https://github.com/user-attachments/assets/bfb7f83d-2949-4ff2-8ae3-d812ff726209)
+Ultra tiny and fast reactivity. <br>
 V3 is a document wide event handler, 
 the **only** thing you pay for is the types you register.
 
-near zero memory cost, near zero CPU cost.
+with near zero memory cost, near zero CPU cost.
 and ZERO entirely for dom elements.
 
 V3 Is ideal for being inlined script on the first request,
