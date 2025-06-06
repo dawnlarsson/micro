@@ -1,15 +1,25 @@
-# Micro V2
-Single file **Super tiny** "reactive framework", no build systems, no bs.
+# Dawning Micro V3 Beta
+ultra tiny and fast reactivity.
 
-V2: Typescript & html attributes
-- SPA router (Client-side Routing)
-- Reactive state & events
-- Semantic HTML & JS DX
+V3 is a document wide event handler, 
+the **only** thing you pay for its they types you register.
+near zero memory cost, near zero CPU cost.
+and ZERO entirely for dom elements.
 
-V1: Pure minified JS
+# V2 -> V3
+V3 Events core is 177 bytes
+V3 Router is 30% smaller than V2, **335 bytes total**
+
+# Beta status
+the core of the reactive/event system is done, now it's just
+adding features to the router, and making more intuitive developer experience and API refinements.
+
+V3 beta is currently harder to use
 
 ## Examples
-#### Counter
+
+### Counter
+
 ```html
 <p count>0</p>
 <button more>+</button>
@@ -17,153 +27,83 @@ V1: Pure minified JS
 ```
 
 ```ts
-import { bind, html, on } from "./micro.ts";
+import { event, select, type, text } from "../micro.ts";
 
-const counter = bind({ count: 0 }, () => {
-        html('count', counter.count)
+var click = event('click');
+var counter = select('count');
+var count = 0;
+
+type('more', [click], () => {
+        text(counter, count++);
 });
 
-on('click', 'more', () => counter.count++);
-on('click', 'less', () => counter.count--);
+type('less', [click], () => {
+        text(counter, count--);
+});
 ```
 
-Minified JS: **329 bytes**
+Minified JS: **345 bytes**
 
-#### SPA router only
+### SPA router only
 404 is baked in by default
 ```ts
-import { page, go } from "./micro.ts";
+import { page, route } from "../router.ts"
 
-page('/', 'Home', () => { return `<a href="/about">about</a>`; });
-page('/about', 'about', () => { return `<a href="/">home</a>`; });
+page('/', 'Home', () => `<a href="/about">About</a>`);
+page('/about', 'About', () => `<a href="/">Home</a>`);
 
-go();
+route();
 ```
-Minified JS: **601 bytes**
+Minified JS: **468 bytes**
+
+### SPA router + Micro
+```ts
+import { event, select, type, text } from "micro.ts";
+import { page, route } from "router.ts"
+
+var click = event('click');
+var counter;
+var count = 0;
+
+type('more', [click], () => {
+        text(counter, count++);
+});
+
+type('less', [click], () => {
+        text(counter, count--);
+});
+
+page('/', 
+        'Home', 
+        () => `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`, 
+        () => {count = 0; counter = select('count')}
+);
+
+route();
+```
+
+Minified JS: **844 bytes**
 
 ## Micro SPA + Cloudflare Workers
 `micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
 live example: https://micro-cf.dawnday.workers.dev/
 
 usage:
-```
+```sh
 cd micro-cf
 bun i
 bun run start
 ```
 
 deploy
-```
+```sh
 bun run deploy
 ```
 
-#### SPA router + Micro
-```ts
-import { page, go, bind, html, on_start, on } from "./micro.ts";
+## Support
+Did you know this effort has gone 100% out of my pocket?
+If you think this project speaks for itself, consider supporting on github sponsors to continue making
+projects like these a reality, open & free.
 
-page('/', 'Home', () => {
-        return `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`;
-});
-
-on_start(() => {
-        const counter = bind({ count: 0 }, () => {
-                html('count', counter.count);
-        });
-        on('click', 'more', () => counter.count++);
-        on('click', 'less', () => counter.count--);
-});
-
-go()
-```
-
-Minified JS: **959 bytes**
-
-#### Todo list
-with input sanitization (XSS prevention)
-```html
-<input todo placeholder="Add task...">
-<button add>Add</button>
-<ul tasks></ul>
-```
-
-```ts
-import { field, select, bind, html, on } from "./micro.ts";
-
-const todos = bind({ list: [] }, () => {
-        html('tasks', todos.list.map((task, i) =>
-                `<li>${task} <button task="${i}">×</button></li>`
-        ).join(''));
-});
-
-field("todo", (text, submit) => {
-        if (!submit) return;
-
-        todos.list = [...todos.list, text];
-        select('todo').value = '';
-
-}, ["add"]);
-
-on('click', 'tasks', (e) => {
-        if (!e.target.matches('[task]')) return;
-        todos.list = todos.list.filter(
-                (_, idx) => idx !== parseInt(e.target.getAttribute('task'))
-        );
-}, '[task]');
-```
-
-Minified JS: **892 bytes**
-
-#### Search
-```html
-<input search placeholder="Search...">
-<div results></div>
-```
-
-```ts
-import { field, bind, html } from "./micro.ts";
-
-const data = ['Apple', 'Banana', 'Cherry', 'Kiwi'];
-const search = bind({ results: data }, () => {
-        html('results', search.results.map(r => `<div>${r}</div>`).join(''));
-});
-
-field("search", (text) => {
-        search.results = data.filter(item =>
-                item.toLowerCase().includes(text.toLowerCase())
-        );
-}, [], true);
-```
-
-Minified JS: **770 bytes**
-
-## Micro v1 pure JS
-Super tiny client side js "framework"
-```js
-$=document.querySelector.bind(document)
-P=(o,r)=>new Proxy(o,{set:(t,k,v)=>(t[k]=v,r?.(),1)})
-H=(e,h)=>($(e).innerHTML=h)
-_=(e,t,f,s)=>$(e).addEventListener(t,s?x=>{x.target.matches(s)&&f(x)}:f)
-```
-211 bytes ~63 bytes gzip
-
-
-#### Optional:
-```js
-$$=document.querySelectorAll.bind(document)
-```
-
-### Example
-```html
-<div id="display"></div>
-<button id="inc">+</button>
-<button id="dec">-</button>
-```
-
-```js
-const counter = P({ count: 0 }, () => {
-  H('#display', `Count: ${counter.count}`)
-})
-
-_('#inc', 'click', () => counter.count++)
-_('#dec', 'click', () => counter.count--)
-```
+## License
+Apache-2.0 license

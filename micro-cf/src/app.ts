@@ -1,19 +1,26 @@
-import { page, go, bind, html, on_start, on } from "../../micro.ts";
+import { event, select, type, text } from "../../micro.ts";
+import { page, route } from "../../router.ts"
+
+var click = event('click');
+var counter;
+var count = 0;
+
+type('more', [click], () => {
+        text(counter, count++);
+});
+
+type('less', [click], () => {
+        text(counter, count--);
+});
 
 page('/', 'Home', () => {
-        return `<h1>Micro + Cloudflare Workers</h1>
+        return `<h1>Micro V3 Beta + Cloudflare Workers</h1>
         <a href="/about">About</a>
         <p count>0</p>
         <button more>+</button>
         <button less>-</button>`;
-});
+}, () => { count = 0; counter = select('count'); });
 
-on_start(() => {
-        const counter = bind({ count: 0 }, () => {
-                html('count', counter.count);
-        });
-        on('click', 'more', () => counter.count++);
-        on('click', 'less', () => counter.count--);
-});
+page('/about', 'About', () => `<a href="/">Home</a>`);
 
-go()
+route();
