@@ -6,14 +6,15 @@ the **only** thing you pay for its they types you register.
 near zero memory cost, near zero CPU cost.
 and ZERO entirely for dom elements.
 
-## Beta status
-This is currently my state of the art research on web reactivity,
-this could serve as a building block for other frameworks
-
-but the core of the reactive/event system is done, 
-
-V3 beta is currently harder to use, I want a more intuitive developer experience and API refinements,
-but this should be the MIN / MAX for size and speed. (To my current knowledge)
+> [!IMPORTANT]
+> ### Beta status
+> This is currently my state of the art research on web reactivity,
+> this could serve as a building block for other frameworks
+>
+> but the core of the reactive/event system is done, 
+>
+> V3 beta is currently harder to use, I want a more intuitive developer experience and API refinements,
+> but this **should be the MIN / MAX for size and speed.** (To my current knowledge)
 
 ## V2 -> V3
 V3 Events core is 177 bytes
