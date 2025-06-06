@@ -1,4 +1,4 @@
-# Dawning Micro V3 Beta
+# Micro V3 Beta
 ultra tiny and fast reactivity.
 
 V3 is a document wide event handler, 
@@ -6,11 +6,12 @@ the **only** thing you pay for its they types you register.
 near zero memory cost, near zero CPU cost.
 and ZERO entirely for dom elements.
 
-# V2 -> V3
+## V2 -> V3
 V3 Events core is 177 bytes
+
 V3 Router is 30% smaller than V2, **335 bytes total**
 
-# Beta status
+## Beta status
 the core of the reactive/event system is done, now it's just
 adding features to the router, and making more intuitive developer experience and API refinements.
 
