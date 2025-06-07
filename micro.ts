@@ -6,6 +6,15 @@
 //      www.dawning.dev
 //
 
+// helpers/de-duplication
+export const doc = document as Document & {}
+
+export const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
+export const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
+
+export const html = (object: HTMLElement, content: any): void => { object.innerHTML = content }
+export const text = (object: HTMLElement, content: any): void => { object.textContent = content }
+
 export var events = []
 
 export const event = name => {
@@ -20,16 +29,8 @@ export const event = name => {
         return events.push(type_map) - 1;
 };
 
-/// what → when → how
-export const type = (attribute: string, hooks: number[], render: any) => {
-        for (const eventIndex of hooks) events[eventIndex].set(attribute, render);
+export const on = (event_list: number[], attribute: string, call: any) => {
+        for (const eventIndex of event_list) events[eventIndex].set(attribute, call);
 };
 
-// helpers/de-duplication
-export const doc = document as Document & {}
-
-export const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
-export const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
-
-export const html = (object: HTMLElement, content: any): void => { object.innerHTML = content }
-export const text = (object: HTMLElement, content: any): void => { object.textContent = content }
+//export const component = () => { }

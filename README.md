@@ -3,6 +3,9 @@
 <div align=center>
 
   ```npm i @dawning-org/micro```
+  <br>
+  ![npm version](https://img.shields.io/npm/v/@dawning-org/micro)
+
 </div><br>
 Ultra tiny and fast reactivity. <br>
 V3 is a document wide event handler, 
@@ -23,8 +26,6 @@ given it's tiny size, it's far more worth it than a second request overhead
 >
 > V3 beta is currently harder to use, I want a more intuitive developer experience and API refinements,
 > but this **should be the MIN / MAX for size and speed.** (To my current knowledge)
->
-> p.s. Forgive me if there’s a tiny bug somewhere, been re-writing V3 during the peek of a cold chugging aspirin lol
 
 ## V2 -> V3
 V3 Events core is 177 bytes
@@ -42,27 +43,27 @@ V3 Router is 30% smaller than V2, **335 bytes total**
 ```
 
 ```ts
-import { event, select, type, text } from "../micro.ts";
+import { event, select, on, text } from "micro.ts";
 
-var click = event('click');
+// combination of events 'on' can take
+var click = [event('click')];
+
+// selects dom element with attribute 'count'
+// (just a de-duplication wrapper for querySelector)
 var counter = select('count');
+
+// A single "reactive" counter
 var count = 0;
-
-type('more', [click], () => {
-        text(counter, ++count);
-});
-
-type('less', [click], () => {
-        text(counter, --count);
-});
+on(click, 'more', () => text(counter, ++count));
+on(click, 'less', () => text(counter, --count));
 ```
 
-Minified JS: **345 bytes**
+Minified JS: **339 bytes**
 
 ### SPA router only
 404 is baked in by default
 ```ts
-import { page, route } from "../router.ts"
+import { page, route } from "router.ts"
 
 page('/', 'Home', () => `<a href="/about">About</a>`);
 page('/about', 'About', () => `<a href="/">Home</a>`);
@@ -73,31 +74,26 @@ Minified JS: **478 bytes**
 
 ### SPA router + Micro
 ```ts
-import { event, select, type, text } from "micro.ts";
+import { event, select, on, text } from "micro.ts";
 import { page, route } from "router.ts"
 
-var click = event('click');
 var counter;
+var click = [event('click')];
+
 var count = 0;
+on(click, 'more', () => text(counter, ++count));
+on(click, 'less', () => text(counter, --count));
 
-type('more', [click], () => {
-        text(counter, ++count);
-});
-
-type('less', [click], () => {
-        text(counter, --count);
-});
-
-page('/', 
-        'Home', 
-        () => `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`, 
-        () => {count = 0; counter = select('count')}
+page('/',
+        'Home',
+        () => `<h1>Home Page</h1><a href="/about">About</a><p count>0</p><button more>+</button><button less>-</button>`,
+        () => { count = 0; counter = select('count') }
 );
 
 route();
 ```
 
-Minified JS: **849 bytes**
+Minified JS: **843 bytes**
 
 ## Micro SPA + Cloudflare Workers
 `micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
