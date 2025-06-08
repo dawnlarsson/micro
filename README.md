@@ -1,7 +1,7 @@
 ![Dawning Micro Header (1)](https://github.com/user-attachments/assets/f5ce7fef-b1d5-4e97-82e6-5791ae55d663)
 <div align=center>
 
-  **```npm i @dawning-org/micro```**
+  **```npm i @dawning-org/micro@3.0.0-beta.2```**
   <a href="https://www.npmjs.com/package/@dawning-org/micro"><img src="https://img.shields.io/npm/v/@dawning-org/micro"/></a>
 
 </div>
