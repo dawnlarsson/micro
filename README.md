@@ -1,12 +1,10 @@
-![Dawning Micro](https://github.com/user-attachments/assets/bfb7f83d-2949-4ff2-8ae3-d812ff726209)
-
+![Dawning Micro Header (1)](https://github.com/user-attachments/assets/f5ce7fef-b1d5-4e97-82e6-5791ae55d663)
 <div align=center>
 
-  ```npm i @dawning-org/micro```
-  <br>
-  ![npm version](https://img.shields.io/npm/v/@dawning-org/micro)
+  **```npm i @dawning-org/micro```**
+  <a href="https://www.npmjs.com/package/@dawning-org/micro"><img src="https://img.shields.io/npm/v/@dawning-org/micro"/></a>
 
-</div><br>
+</div>
 Ultra tiny and fast reactivity. <br>
 V3 is a document wide event handler, 
 the **only** thing you pay for is the types you register.
