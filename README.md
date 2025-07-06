@@ -16,14 +16,34 @@ V3 Is ideal for being inlined script on the first request,
 given it's tiny size, it's far more worth it than a second request overhead
 
 > [!IMPORTANT]
-> ### Beta status
-> This is currently my state of the art research on web reactivity,
-> this could serve as a building block for other frameworks
->
-> but the core of the reactive/event system is done, 
->
-> V3 beta is currently harder to use, I want a more intuitive developer experience and API refinements,
-> but this **should be the MIN / MAX for size and speed.** (To my current knowledge)
+> ## V4 Draft
+```
+<body>
+	<counter-></counter->
+</body>
+```
+
+```
+import { component, event } from "micro.v4.ts"
+
+var click = event("click");
+
+component("counter", {
+
+        db: { count: 0 },
+
+        [click](i) {
+                i.count++;
+        },
+
+        draw(i) {
+                return "<p count>" + i.count + "</p><button more>+</button><button less>-</button>";
+        }
+});
+```
+
+467 bytes v4, 618 total (example)
+
 
 ## V2 -> V3
 V3 Events core is 177 bytes

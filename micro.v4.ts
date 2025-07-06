@@ -8,12 +8,15 @@
 
 var components: { [key: string]: any } = {}
 var event_count: number = 0;
+const com = (that) => components[that.tagName];
+const attrget = (that) => that.getAttribute("_");
 
 export const event = (name: string) => {
         addEventListener(name, (e: Event) => {
                 var target = e.target.closest("[_]");
                 if (target) {
-                        components[target.tagName][event_count](e);
+                        var comp = com(target);
+                        comp[event_count](comp.i[attrget(target)]);
                         _draw(target);
                 }
         })
@@ -21,12 +24,17 @@ export const event = (name: string) => {
 };
 
 const _draw = (that) => {
-        that.innerHTML = components[that.tagName].draw()
+        var comp = com(that);
+        that.innerHTML = comp.draw(comp.i[attrget(that)]);
 };
+
 
 class _ extends HTMLElement {
         connectedCallback() {
-                this.setAttribute("_", this.tagName); _draw(this)
+                var comp = com(this);
+                comp.i ? comp.i.push(structuredClone(comp.db)) : comp.i = [structuredClone(comp.db)];
+                this.setAttribute("_", comp.i.length - 1); // Also fixed: should be length - 1 for 0-based index
+                _draw(this);
         }
 }
 
