@@ -32,5 +32,3 @@ export const event = name => {
 export const on = (event_list: number[], attribute: string, call: any) => {
         for (const eventIndex of event_list) events[eventIndex].set(attribute, call);
 };
-
-//export const component = () => { }
