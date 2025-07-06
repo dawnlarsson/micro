@@ -17,13 +17,13 @@ given it's tiny size, it's far more worth it than a second request overhead
 
 > [!IMPORTANT]
 > ## V4 Draft
-```
+```html
 <body>
 	<counter-></counter->
 </body>
 ```
 
-```
+```ts
 import { component, event } from "micro.v4.ts"
 
 var click = event("click");
