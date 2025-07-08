@@ -30,7 +30,7 @@ var click = event("click");
 
 component("counter", {
 
-        db: { count: 0 },
+        i: { count: 0 },
 
         [click](i) {
                 i.count++;
@@ -42,7 +42,7 @@ component("counter", {
 });
 ```
 
-467 bytes v4, 618 total (example)
+441 bytes v4, 591 total (example)
 
 
 ## V2 -> V3

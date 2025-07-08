@@ -16,7 +16,7 @@ export const event = (name: string) => {
                 var target = e.target.closest("[_]");
                 if (target) {
                         var comp = com(target);
-                        comp[event_count](comp.i[attrget(target)]);
+                        comp[event_count](comp._[attrget(target)]);
                         _draw(target);
                 }
         })
@@ -25,15 +25,15 @@ export const event = (name: string) => {
 
 const _draw = (that) => {
         var comp = com(that);
-        that.innerHTML = comp.draw(comp.i[attrget(that)]);
+        that.innerHTML = comp.draw(comp._[attrget(that)]);
 };
 
 
 class _ extends HTMLElement {
         connectedCallback() {
                 var comp = com(this);
-                comp.i ? comp.i.push(structuredClone(comp.db)) : comp.i = [structuredClone(comp.db)];
-                this.setAttribute("_", comp.i.length - 1); // Also fixed: should be length - 1 for 0-based index
+                comp._ ? comp._.push({ ...comp.i }) : comp._ = [{ ...comp.i }];
+                this.setAttribute("_", comp._.length - 1);
                 _draw(this);
         }
 }
