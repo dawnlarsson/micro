@@ -17,7 +17,7 @@ export const event = (name: string) => {
                 var target = ev_target.closest("[_]");
                 if (target) {
                         var comp = com(target);
-                        comp[ev_target.attributes[0].name]?.(comp._[attrget(target)]);
+                        comp[ev_target.attributes[0]?.name]?.(comp._[attrget(target)]);
                         _draw(target);
                 }
         })

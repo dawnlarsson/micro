@@ -41,7 +41,7 @@ component("counter", {
 });
 ```
 
-464 bytes v4, 628 total (example)
+465 bytes v4, 629 total (example)
 
 
 ## V2 -> V3
