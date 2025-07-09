@@ -1,6 +1,6 @@
 {
   "name": "@dawning-org/micro",
-  "version": "3.0.0-beta.2",
+  "version": "4.0.0",
   "description": "ultra tiny and fast reactive framework",
   "homepage": "https://github.com/dawnlarsson/micro",
   "author": "Dawn Larsson",
