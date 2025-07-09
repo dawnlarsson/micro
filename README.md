@@ -26,7 +26,7 @@ given it's tiny size, it's far more worth it than a second request overhead
 ```ts
 import { component, event } from "../micro.v4.ts"
 
-var click = event("click");
+event("click");
 
 component("counter", {
 
@@ -41,7 +41,7 @@ component("counter", {
 });
 ```
 
-465 bytes v4, 629 total (example)
+350 bytes v4, 509 total (example)
 
 
 ## V2 -> V3

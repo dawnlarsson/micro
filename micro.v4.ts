@@ -5,42 +5,25 @@
 //      License: Apache-2.0 license
 //      www.dawning.dev
 //
-
-var components: { [key: string]: any } = {}
-var event_count: number = 0;
-const com = (that) => components[that.tagName];
-const attrget = (that) => that.getAttribute("_");
+var instances = {}, event_count, instance_count: number = 0;
 
 export const event = (name: string) => {
         addEventListener(name, (e: Event) => {
-                var ev_target = e.target
-                var target = ev_target.closest("[_]");
+                var ev_target = e.target, target = ev_target.closest("[_]"), target_name = target?.getAttribute("_"), i = instances[target_name];
+
                 if (target) {
-                        var comp = com(target);
-                        comp[ev_target.attributes[0]?.name]?.(comp._[attrget(target)]);
-                        _draw(target);
+                        i.c[ev_target.attributes[0]?.name]?.(i);
+                        target.innerHTML = i.c.draw(i);
                 }
         })
-        return ++event_count;
+        ++event_count;
 };
 
-const _draw = (that) => {
-        var comp = com(that);
-        that.innerHTML = comp.draw(comp._[attrget(that)]);
-};
-
-class _ extends HTMLElement {
+export const component = (name, c: any) => customElements.define(name + "-", class extends HTMLElement {
         connectedCallback() {
-                var self = this;
-                var comp = com(self);
-                comp._ ? comp._.push({ ...comp.i }) : comp._ = [{ ...comp.i }];
-                self.setAttribute("_", comp._.length - 1);
-                _draw(self);
+                var self = this, self_name = name + instance_count++;
+                instances[self_name] = { c, ...c.i }
+                self.setAttribute("_", self_name);
+                self.innerHTML = c.draw(instances[self_name]);
         }
-}
-
-export const component = (name, component_obj: any) => {
-        name += "-";
-        components[name.toUpperCase()] = component_obj;
-        customElements.define(name, _);
-}
+});
