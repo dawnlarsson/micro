@@ -24,7 +24,7 @@ given it's tiny size, it's far more worth it than a second request overhead
 ```
 
 ```ts
-import { component, event } from "micro.v4.ts"
+import { component, event } from "../micro.v4.ts"
 
 var click = event("click");
 
@@ -32,17 +32,16 @@ component("counter", {
 
         i: { count: 0 },
 
-        [click](i) {
-                i.count++;
-        },
+        more(i) { i.count++ },
+        less(i) { i.count-- },
 
         draw(i) {
-                return "<p count>" + i.count + "</p><button more>+</button><button less>-</button>";
+                return "<p>" + i.count + "</p><button more>+</button><button less>-</button>";
         }
 });
 ```
 
-441 bytes v4, 591 total (example)
+464 bytes v4, 628 total (example)
 
 
 ## V2 -> V3

@@ -13,10 +13,11 @@ const attrget = (that) => that.getAttribute("_");
 
 export const event = (name: string) => {
         addEventListener(name, (e: Event) => {
-                var target = e.target.closest("[_]");
+                var ev_target = e.target
+                var target = ev_target.closest("[_]");
                 if (target) {
                         var comp = com(target);
-                        comp[event_count](comp._[attrget(target)]);
+                        comp[ev_target.attributes[0].name]?.(comp._[attrget(target)]);
                         _draw(target);
                 }
         })
@@ -28,13 +29,13 @@ const _draw = (that) => {
         that.innerHTML = comp.draw(comp._[attrget(that)]);
 };
 
-
 class _ extends HTMLElement {
         connectedCallback() {
-                var comp = com(this);
+                var self = this;
+                var comp = com(self);
                 comp._ ? comp._.push({ ...comp.i }) : comp._ = [{ ...comp.i }];
-                this.setAttribute("_", comp._.length - 1);
-                _draw(this);
+                self.setAttribute("_", comp._.length - 1);
+                _draw(self);
         }
 }
 
