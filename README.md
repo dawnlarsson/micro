@@ -5,7 +5,7 @@
   <a href="https://www.npmjs.com/package/@dawning-org/micro"><img src="https://img.shields.io/npm/v/@dawning-org/micro"/></a>
 
 </div>
-Ultra tiny component "framework", 350 bytes! and a SPA router, 335 bytes!
+Ultra tiny component "framework", 366 bytes! and a SPA router, 376 bytes!
 Micro v4 freeloads ontop of the browsers native component system, fused with a tiny attribute based event system
 
 ```html
@@ -15,7 +15,7 @@ Micro v4 freeloads ontop of the browsers native component system, fused with a t
 ```
 
 ```ts
-import { component, event } from "../micro.v4.ts"
+import { component, event } from "../micro.ts"
 
 event("click");
 
@@ -31,7 +31,7 @@ component("counter", {
         }
 });
 ```
-350 bytes v4, 509 total (example)
+366 bytes v4, 524 total (example)
 
 ### SPA router only
 404 is baked in by default
@@ -43,11 +43,53 @@ page('/about', 'About', () => `<a href="/">Home</a>`);
 
 route();
 ```
-Minified JS: **478 bytes**
+Minified JS: **513 bytes**
 
-### V4+ TBD
+### Micro V4 SPA
+```ts
+import { component, event } from "../../micro.ts"
+import { page, route } from "../../router.ts"
+
+event("click");
+
+component("counter", {
+
+        i: { count: 0 },
+
+        more(i) { i.count++ },
+        less(i) { i.count-- },
+
+        draw(i) {
+                return "<p>" + i.count + "</p><button more>+</button><button less>-</button>";
+        }
+});
+
+page('/', 'Home', () => `<h1>Home Page</h1><a href="/about">About</a><counter-></counter->`);
+page('/about', 'About', () => `<a href="/">Home</a>`);
+
+route();
+```
+Minified JS: **1002 bytes**
+
+## Micro SPA + Cloudflare Workers
+`micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
+live example: https://micro-cf.dawnday.workers.dev/
+
+usage:
+```sh
+cd micro-cf
+bun i
+bun run start
+```
+
+deploy
+```sh
+bun run deploy
+```
+
+### V4+
 - Router fixes
-- Examples
+- More examples
 
 ## Support
 Did you know this effort has gone 100% out of my pocket?

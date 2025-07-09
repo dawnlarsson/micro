@@ -5,11 +5,10 @@
 //      License: Apache-2.0 license
 //      www.dawning.dev
 //
-
-import { doc } from './micro.ts';
+import { doc, registry_event } from "./micro";
 
 export var routes: Record<string, [string, () => string, (() => void)?]> = {
-        '*': ['404', () => '<h1>404</h1><a href="/">Back</a>']
+        '*': ['404', '<h1>404</h1><a href="/">Back</a>']
 };
 
 export const route = (url: string | void): void => {
@@ -28,8 +27,8 @@ export const page = (url: string, title: string, render: () => string, postRende
         routes[url] = [title, render, postRender || null];
 };
 
-addEventListener('popstate', () => route());
-addEventListener('click', e => {
+registry_event('popstate', () => route());
+registry_event('click', e => {
         const link = (e.target as HTMLElement)?.closest('a[href^="/"]');
         if (link) {
                 e.preventDefault();

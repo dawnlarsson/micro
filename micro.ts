@@ -1,34 +1,32 @@
 //
-//      Dawning Micro V3, ultra tiny and fast reactivity.
+//      Dawning Micro V4, ultra tiny and fast reactivity.
 //
 //      By Dawn Larsson 2025 (github.com/dawnlarsson/micro)
 //      License: Apache-2.0 license
 //      www.dawning.dev
 //
+export var instances = {},
+        event_count, instance_count: number = 0,
+        registry_event = (name, e) => addEventListener(name, e),
+        doc = document;
 
-// helpers/de-duplication
-export const doc = document as Document & {}
+export const event = (name: string) => {
+        registry_event(name, (e: Event) => {
+                var ev_target = e.target, target = ev_target.closest("[_]"), target_name = target?.getAttribute("_"), i = instances[target_name];
 
-export const select = (at: string) => doc.querySelector(`[${at}]`) as HTMLElement;
-export const selectAll = (at: string) => doc.querySelectorAll(`[${at}]`)
-
-export const html = (object: HTMLElement, content: any): void => { object.innerHTML = content }
-export const text = (object: HTMLElement, content: any): void => { object.textContent = content }
-
-export var events = []
-
-export const event = name => {
-        const type_map = new Map();
-
-        addEventListener(name, e => {
-                for (const [attribute, render] of type_map) {
-                        e.target.hasAttribute(attribute) && render(name, e.target);
+                if (target) {
+                        i.c[ev_target.attributes[0]?.name]?.(i);
+                        target.innerHTML = i.c.draw(i);
                 }
-        });
-
-        return events.push(type_map) - 1;
+        })
+        ++event_count;
 };
 
-export const on = (event_list: number[], attribute: string, call: any) => {
-        for (const eventIndex of event_list) events[eventIndex].set(attribute, call);
-};
+export const component = (name, c: any) => customElements.define(name + "-", class extends HTMLElement {
+        connectedCallback() {
+                var self = this, self_name = name + instance_count++;
+                instances[self_name] = { c, ...c.i }
+                self.setAttribute("_", self_name);
+                self.innerHTML = c.draw(instances[self_name]);
+        }
+});
