@@ -8,6 +8,8 @@
 Ultra tiny component "framework", 350 bytes! and a SPA router, 335 bytes!
 Micro v4 freeloads ontop of the browsers native component system, fused with a tiny attribute based event system
 
+### Example
+
 ```html
 <body>
 	<counter-></counter->
