@@ -5,7 +5,7 @@
   <a href="https://www.npmjs.com/package/@dawning-org/micro"><img src="https://img.shields.io/npm/v/@dawning-org/micro"/></a>
 
 </div>
-Ultra tiny component "framework", 366 bytes! and a SPA router, 376 bytes!
+Ultra tiny component "framework", 366 bytes! and a SPA router, 409 bytes!
 Micro v4 freeloads ontop of the browsers native component system, fused with a tiny attribute based event system
 
 ### Example
@@ -45,7 +45,7 @@ page('/about', 'About', () => `<a href="/">Home</a>`);
 
 route();
 ```
-Minified JS: **513 bytes**
+Minified JS: **507 bytes**
 
 ### Micro V4 SPA
 ```ts
@@ -71,7 +71,7 @@ page('/about', 'About', () => `<a href="/">Home</a>`);
 
 route();
 ```
-Minified JS: **1002 bytes**
+Minified JS: **1035 bytes**
 
 ## Micro SPA + Cloudflare Workers
 `micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
@@ -90,7 +90,6 @@ bun run deploy
 ```
 
 ### V4+
-- Router fixes
 - More examples
 
 ## Support

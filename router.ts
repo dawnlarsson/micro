@@ -11,10 +11,10 @@ export var routes: Record<string, [string, () => string, (() => void)?]> = {
         '*': ['404', '<h1>404</h1><a href="/">Back</a>']
 };
 
-export const route = (url: string | void): void => {
+export const route = (url: string | void, push = true): void => {
         url = url || location.pathname;
 
-        history.pushState(0, '', url);
+        if (push) history.pushState(0, '', url);
 
         var page = routes[url] || routes['*'];
         doc.title = page[0];
@@ -27,11 +27,12 @@ export const page = (url: string, title: string, render: () => string, postRende
         routes[url] = [title, render, postRender || null];
 };
 
-registry_event('popstate', () => route());
+registry_event('popstate', () => route(location.pathname, false));
+
 registry_event('click', e => {
         const link = (e.target as HTMLElement)?.closest('a[href^="/"]');
         if (link) {
                 e.preventDefault();
-                route(link.pathname);
+                route(link.pathname, true);
         }
 });
