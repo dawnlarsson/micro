@@ -1,0 +1,13 @@
+name = "micro-example"
+main = "worker/worker.ts"
+compatibility_date = "2026-02-01"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+
+[observability]
+enabled = true
+
+[build]
+command = "bun run build"
