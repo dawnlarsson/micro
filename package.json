@@ -1,7 +1,7 @@
 {
   "name": "@dawning-org/micro",
-  "version": "4.0.1",
-  "description": "ultra tiny and fast reactive framework",
+  "version": "5.0.0",
+  "description": "ultra tiny reactive framework with signals. ~400 bytes.",
   "homepage": "https://github.com/dawnlarsson/micro",
   "author": "Dawn Larsson",
   "bugs": {
@@ -15,15 +15,21 @@
     "micro",
     "framework",
     "reactive",
+    "signals",
     "tiny",
     "fast",
-    "blazingly fast"
+    "bun",
+    "jsx"
   ],
   "license": "Apache-2.0",
   "main": "micro.ts",
+  "bin": {
+    "micro": "./build.ts"
+  },
   "files": [
     "micro.ts",
     "router.ts",
+    "build.ts",
     "README.md",
     "LICENSE"
   ]

@@ -5,92 +5,76 @@
   <a href="https://www.npmjs.com/package/@dawning-org/micro"><img src="https://img.shields.io/npm/v/@dawning-org/micro"/></a>
 
 </div>
-Ultra tiny component "framework", 366 bytes! and a SPA router, 409 bytes!
-Micro v4 freeloads ontop of the browsers native component system, fused with a tiny attribute based event system
 
-### Example
+Ultra tiny reactive framework with signals. **268 bytes** runtime. Zero config. Bun only.
+No virtual DOM. No diffing. No hydration. No framework.
 
-```html
-<body>
-	<counter-></counter->
-</body>
+Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. JSX is compiled away at build time (never shipped to the browser). State binds to the DOM through signals — only the text nodes that changed get updated.
+
+---
+
+### Counter in 6 lines
+
+```tsx
+// components/counter.tsx
+count = 0
+render = (s) => <p>{s.count} <button inc>+</button> <button dec>-</button></p>
+inc = (s) => { s.count.v++ }
+dec = (s) => { s.count.v-- }
 ```
 
-```ts
-import { component, event } from "../micro.ts"
+Output: **1,034 bytes** minified (runtime + component, entire app)
 
-event("click");
+### CLI
 
-component("counter", {
-
-        i: { count: 0 },
-
-        more(i) { i.count++ },
-        less(i) { i.count-- },
-
-        draw(i) {
-                return "<p>" + i.count + "</p><button more>+</button><button less>-</button>";
-        }
-});
-```
-366 bytes v4, 524 total (example)
-
-### SPA router only
-404 is baked in by default
-```ts
-import { page, route } from "router.ts"
-
-page('/', 'Home', () => `<a href="/about">About</a>`);
-page('/about', 'About', () => `<a href="/">Home</a>`);
-
-route();
-```
-Minified JS: **507 bytes**
-
-### Micro V4 SPA
-```ts
-import { component, event } from "../../micro.ts"
-import { page, route } from "../../router.ts"
-
-event("click");
-
-component("counter", {
-
-        i: { count: 0 },
-
-        more(i) { i.count++ },
-        less(i) { i.count-- },
-
-        draw(i) {
-                return "<p>" + i.count + "</p><button more>+</button><button less>-</button>";
-        }
-});
-
-page('/', 'Home', () => `<h1>Home Page</h1><a href="/about">About</a><counter-></counter->`);
-page('/about', 'About', () => `<a href="/">Home</a>`);
-
-route();
-```
-Minified JS: **1035 bytes**
-
-## Micro SPA + Cloudflare Workers
-`micro-cf` contains a starting template for using micro with cloudflare workers with bun bun
-live example: https://micro-cf.dawnday.workers.dev/
-
-usage:
 ```sh
-cd micro-cf
-bun i
-bun run start
+bun micro/build build      # compile components → dist/
+bun micro/build dev        # build + serve on :3000
+bun micro/build serve      # serve dist/ only
 ```
 
-deploy
-```sh
-bun run deploy
+### Component format
+
+A component file is a flat `.tsx` where the filename becomes the tag name (`counter.tsx` → `<counter->`).
+
+```tsx
+// components/counter.tsx
+
+count = 0
+
+render = (s) =>
+  <div>
+    <p>{s.count}</p>
+    <button inc>+</button>
+    <button dec>-</button>
+  </div>
+
+inc = (s) => { s.count.v++ }
+dec = (s) => { s.count.v-- }
 ```
 
-### V4+
-- More examples
+- **Plain values** (`count = 0`) → reactive state (each becomes a signal)
+- **`render`** → called once at build time with a proxy, returns JSX
+- **Functions** (`inc`, `dec`) → actions, dispatched by attribute name
+- **`s.count.v`** → read/write the signal's value (`.v` getter/setter)
+
+### SPA Router
+
+Optional. Import alongside micro:
+
+```ts
+import { page, route } from "micro/router.ts"
+
+page('/', 'Home', () => `<h1>Home</h1><counter-></counter-><a href="/about">About</a>`)
+page('/about', 'About', () => `<a href="/">Home</a>`)
+
+route()
+```
+
+Renders into `<main>` if present, otherwise `document.body`. 404 is built in. Intercepts `<a href="/">` clicks automatically.
+
+---
+
 
 ## Support
 Did you know this effort has gone 100% out of my pocket?
