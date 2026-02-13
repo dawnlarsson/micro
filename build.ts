@@ -65,8 +65,8 @@ function parseComponent(src) {
         if (/^(?:(?:var|const|let)\s+)?\w+\s*=\s*/.test(line)) {
             flush();
             cur.push(line);
-        } else if (line.trim() === "" && !cur.length) {
-            // skip leading blanks
+        } else if (!cur.length && (line.trim() === "" || /^\/\//.test(line.trim()))) {
+            // skip leading blanks and comments
         } else {
             cur.push(line);
         }
@@ -82,7 +82,7 @@ export async function build(cwd?) {
     var componentsDir = join(cwd, "components");
     var distDir = join(cwd, "dist");
     var publicDir = join(cwd, "public");
-    var microDir = new URL(".", import.meta.url).pathname;
+    var microDir = new URL(".", import.meta.url).pathname.replace(/^\/([A-Z]:)/i, "$1");
 
     console.log("micro build\n");
 
@@ -205,21 +205,40 @@ ${tags}
 
 // --- Dev Server ---
 
-function serve(cwd?) {
+var reloadScript = `<script>(function(){var s=new WebSocket("ws://"+location.host+"/_ws");s.onmessage=function(){location.reload()};s.onclose=function(){setTimeout(function(){location.reload()},1000)}})()</script>`;
+
+function serve(cwd?, live?) {
     cwd = cwd || process.cwd();
     var distDir = join(cwd, "dist");
+    var sockets = new Set<any>();
 
     Bun.serve({
         port: 3000,
-        async fetch(req) {
+        async fetch(req, server) {
+            if (new URL(req.url).pathname === "/_ws")
+                return server.upgrade(req) ? undefined : new Response("fail", { status: 500 });
+
             var path = new URL(req.url).pathname;
             if (path === "/") path = "/index.html";
             var f = Bun.file(join(distDir, path));
-            return await f.exists() ? new Response(f) : new Response("404", { status: 404 });
+            if (!await f.exists()) return new Response("404", { status: 404 });
+
+            if (live && path.endsWith(".html")) {
+                var html = await f.text();
+                return new Response(html.replace("</body>", reloadScript + "</body>"),
+                    { headers: { "Content-Type": "text/html" } });
+            }
+            return new Response(f);
+        },
+        websocket: {
+            open(ws) { sockets.add(ws) },
+            close(ws) { sockets.delete(ws) },
+            message() { }
         }
     });
 
-    console.log("  → http://localhost:3000\n");
+    console.log("  → http://localhost:3000" + (live ? "  (live reload)\n" : "\n"));
+    return () => { for (var ws of sockets) ws.send("reload") };
 }
 
 // --- CLI ---
@@ -230,7 +249,23 @@ if (cmd === "build") {
     await build();
 } else if (cmd === "dev") {
     await build();
-    serve();
+    var reload = serve(undefined, true);
+
+    var cwd = process.cwd();
+    var { watch } = await import("fs");
+    var timer;
+    for (var dir of ["components", "public"]) {
+        try {
+            watch(join(cwd, dir), { recursive: true }, () => {
+                clearTimeout(timer);
+                timer = setTimeout(async () => {
+                    console.log("  ~ rebuilding...");
+                    await build(cwd);
+                    reload();
+                }, 100);
+            });
+        } catch { }
+    }
 } else if (cmd === "serve") {
     serve();
 } else {
@@ -239,7 +274,7 @@ if (cmd === "build") {
 
   usage:
     bun micro/build.ts build     compile components → dist/
-    bun micro/build.ts dev       build + serve
+    bun micro/build.ts dev       build + serve + watch
     bun micro/build.ts serve     serve dist/
 `);
 }

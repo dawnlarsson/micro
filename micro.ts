@@ -25,38 +25,68 @@ export function component(name, state, tpl, actions) {
         frag.innerHTML = tpl;
 
         customElements.define(name + "-", class extends HTMLElement {
+                _m;
                 connectedCallback() {
                         var id = name + instance_count++, s = {}, k;
 
                         for (k in state) s[k] = signal(Array.isArray(state[k]) ? [...state[k]] : state[k]);
 
-                        var dom = frag.content.cloneNode(true),
-                                w = doc.createTreeWalker(dom, 4), p, r = [];
+                        for (k of this.getAttributeNames())
+                                if (s[k]) s[k].v = typeof state[k] === "number" ? +this.getAttribute(k)
+                                        : typeof state[k] === "boolean" ? this.getAttribute(k) !== "false"
+                                                : this.getAttribute(k);
 
-                        while (p = w.nextNode()) {
-                                var m = p.data.match(/^\$\$(\w+)\$\$$/);
-                                m && s[m[1]] && r.push([p, m[1]])
+                        var dom = frag.content.cloneNode(true),
+                                w = doc.createTreeWalker(dom, 4), p, r = [], nodes = [];
+
+                        while (p = w.nextNode()) nodes.push(p);
+
+                        for (p of nodes) {
+                                var parts = p.data.split(/(\$\$\w+\$\$)/);
+                                if (parts.length < 2) continue;
+                                for (var part of parts) {
+                                        var n = doc.createTextNode(part), m = part.match(/^\$\$(\w+)\$\$$/);
+                                        p.parentNode.insertBefore(n, p);
+                                        m && s[m[1]] && r.push([n, m[1]])
+                                }
+                                p.remove()
                         }
 
+                        var alive = true;
                         for (var [p, k] of r)
-                                ((p, k) => effect(() => p.data = "" + s[k].v))(p, k);
+                                ((p, k) => effect(() => { if (alive) p.data = "" + s[k].v }))(p, k);
 
                         this.appendChild(dom);
                         this.setAttribute("_", id);
                         instances[id] = { s, actions };
+                        this._m = { s, kill: () => alive = false };
+                        actions.mount?.(s, this);
+                }
+
+                disconnectedCallback() {
+                        if (!this._m) return;
+                        this._m.kill();
+                        var id = this.getAttribute("_");
+                        if (id) delete instances[id];
+                        actions.unmount?.(this._m.s, this);
                 }
         })
 }
 
-function wire(ev) {
+function handle(ev) {
         doc.addEventListener(ev, e => {
-                var el = e.target, root = el.closest("[_]");
+                var el = e.target, root = el.closest("[_]"), tag = el.tagName;
                 if (!root) return;
                 var inst = instances[root.getAttribute("_")];
                 if (!inst) return;
-                var a = el.attributes[0]?.name;
-                a && inst.actions[a] && inst.actions[a](inst.s, e);
+                var expect = /^(input|textarea)$/i.test(tag) ? "input"
+                        : /^select$/i.test(tag) ? "change"
+                                : /^form$/i.test(tag) ? "submit" : "click";
+                if (ev !== expect) return;
+                for (var a of el.attributes)
+                        if (inst.actions[a.name] && a.name !== "mount" && a.name !== "unmount")
+                                return inst.actions[a.name](inst.s, e);
         })
 }
 
-wire("click"); wire("input"); wire("change"); wire("submit");
+handle("click"); handle("input"); handle("change"); handle("submit");

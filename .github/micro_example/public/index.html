@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Micro Example</title>
+    <link rel="icon" type="image/svg+xml" href="/micro.svg">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1rem;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 0.25rem;
+        }
+
+        h1 span {
+            color: #888;
+            font-weight: 400;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            max-width: 900px;
+        }
+
+        .card {
+            background: #151515;
+            border: 1px solid #252525;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            min-width: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #666;
+        }
+
+        .value {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        button {
+            background: #1e1e1e;
+            color: #ccc;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+
+        button:hover {
+            background: #2a2a2a;
+        }
+
+        input[type="text"] {
+            background: #1e1e1e;
+            color: #ccc;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: center;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #555;
+        }
+
+        .props-demo {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <img src="/logo.svg" alt="Micro" width="220" height="49">
+    <p class="subtitle">Ultra tiny reactive framework with signals</p>
+
+    <div class="grid">
+        <counter-></counter->
+
+        <counter- count="100"></counter->
+
+        <greeter-></greeter->
+
+        <greeter- name="Dawn"></greeter->
+
+        <timer-></timer->
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+
+</html>
