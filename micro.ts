@@ -43,7 +43,7 @@ export var doc = document,
                         disconnectedCallback() {
                                 if (!this._m) return
                                 for (var k in this._m.s) this._m.s[k].s.clear()
-                                this._m.u?.(this._m.s, this)
+                                this._m.u?.(this)
                         }
                 })
         }

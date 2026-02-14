@@ -10,22 +10,21 @@ var hBg = ""
 var sBg = "background:linear-gradient(to right,#808080,#FF0000)"
 var vBg = "background:linear-gradient(to right,#000,#FF0000)"
 
-var render = (s) =>
-    <div class="card picker-card">
-        <div class="picker-swatch" style={s.swatch}></div>
-        <p class="hex-value">{s.hex}</p>
-        <p class="rgb-readout"><span class="ch-r">R {s.rv}</span>  <span class="ch-g">G {s.gv}</span>  <span class="ch-b">B {s.bv}</span></p>
-        <label class="slider-row"><span class="ch-label">H</span><input type="range" min="0" max="360" value="0" class="hue-slider" data-c="h" oninput="slide" /><span class="ch-val">{s.hv}</span></label>
-        <label class="slider-row"><span class="ch-label">S</span><div class="track" style={s.sBg}><input type="range" min="0" max="100" value="100" data-c="s" oninput="slide" /></div><span class="ch-val">{s.sv}</span></label>
-        <label class="slider-row"><span class="ch-label">V</span><div class="track" style={s.vBg}><input type="range" min="0" max="100" value="100" data-c="v" oninput="slide" /></div><span class="ch-val">{s.vv}</span></label>
-    </div>
+render = () => < div class="card picker-card" >
+    <div class="picker-swatch" style={swatch}></div>
+    <p class="hex-value">{hex}</p>
+    <p class="rgb-readout"><span class="ch-r">R {rv}</span>  <span class="ch-g">G {gv}</span>  <span class="ch-b">B {bv}</span></p>
+    <label class="slider-row"><span class="ch-label">H</span><input type="range" min="0" max="360" value="0" class="hue-slider" data-c="h" oninput="slide" /><span class="ch-val">{hv}</span></label>
+    <label class="slider-row"><span class="ch-label">S</span><div class="track" style={sBg}><input type="range" min="0" max="100" value="100" data-c="s" oninput="slide" /></div><span class="ch-val">{sv}</span></label>
+    <label class="slider-row"><span class="ch-label">V</span><div class="track" style={vBg}><input type="range" min="0" max="100" value="100" data-c="v" oninput="slide" /></div><span class="ch-val">{vv}</span></label>
+</div >
 
-var slide = (s, e) => {
+var slide = () => {
     var c = e.target.getAttribute("data-c")
-    var h = c === "h" ? +e.target.value : s.hv.v
-    var st = c === "s" ? +e.target.value : s.sv.v
-    var vl = c === "v" ? +e.target.value : s.vv.v
-    s.hv.v = h; s.sv.v = st; s.vv.v = vl
+    var h = c === "h" ? +e.target.value : hv
+    var st = c === "s" ? +e.target.value : sv
+    var vl = c === "v" ? +e.target.value : vv
+    hv = h; sv = st; vv = vl
 
     var hp = h / 60, sf = st / 100, vf = vl / 100
     var cv = vf * sf, x = cv * (1 - Math.abs(hp % 2 - 1)), m = vf - cv
@@ -34,11 +33,11 @@ var slide = (s, e) => {
         : hp < 4 ? (r = 0, g = x, b = cv) : hp < 5 ? (r = x, g = 0, b = cv) : (r = cv, g = 0, b = x)
     r = Math.round((r + m) * 255); g = Math.round((g + m) * 255); b = Math.round((b + m) * 255)
 
-    s.rv.v = r; s.gv.v = g; s.bv.v = b
-    s.hex.v = "#" + [r, g, b].map(c => c.toString(16).padStart(2, "0").toUpperCase()).join("")
-    s.swatch.v = "background:" + s.hex.v
+    rv = r; gv = g; bv = b
+    hex = "#" + [r, g, b].map(c => c.toString(16).padStart(2, "0").toUpperCase()).join("")
+    swatch = "background:" + hex
 
     var hr = "hsl(" + h + ",100%,50%)"
-    s.sBg.v = "background:linear-gradient(to right,hsl(" + h + ",0%," + vl / 2 + "%)," + hr + ")"
-    s.vBg.v = "background:linear-gradient(to right,#000,hsl(" + h + "," + st + "%,50%))"
+    sBg = "background:linear-gradient(to right,hsl(" + h + ",0%," + vl / 2 + "%)," + hr + ")"
+    vBg = "background:linear-gradient(to right,#000,hsl(" + h + "," + st + "%,50%))"
 }

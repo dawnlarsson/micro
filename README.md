@@ -10,7 +10,7 @@
 Ultra tiny reactive framework with signals. **~860 byte** runtime (**~520 bytes** gzipped). Zero config. Bun only.
 No virtual DOM. No diffing. No hydration. No runtime template parsing.
 
-Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. The compiler does the heavy lifting: JSX is compiled away, signal bindings are resolved, DOM paths are generated, and event delegation is tailored — all at build time. The browser runtime is six shared helpers: signal constructor, prop coercion, text binding, attribute binding, event map, and component registration.
+Components are flat `.tsx` files — top-level assignments become state, `render` returns JSX, functions are actions. Write plain variables and the compiler makes them reactive. JSX is compiled away, signal bindings are resolved, DOM paths are generated, and event delegation is tailored — all at build time.
 
 ---
 
@@ -19,9 +19,12 @@ Components are flat `.tsx` files — top-level assignments become state, functio
 ```tsx
 // components/counter.tsx
 var count = 0
-var render = (s) => <p>{s.count} <button onclick="inc">+</button> <button onclick="dec">-</button></p>
-var inc = (s) => { s.count.v++ }
-var dec = (s) => { s.count.v-- }
+
+render = () =>
+  <p>{count} <button onclick="inc">+</button> <button onclick="dec">-</button></p>
+
+var inc = () => { count++ }
+var dec = () => { count-- }
 ```
 
 Output: **~1.2 KB** minified, **~720 bytes** gzipped (runtime + component, entire app)
@@ -45,21 +48,22 @@ A component file is a flat `.tsx` where the filename becomes the tag name (`coun
 
 var count = 0
 
-var render = (s) =>
+render = () =>
   <div>
-    <p>{s.count}</p>
+    <p>{count}</p>
     <button onclick="inc">+</button>
     <button onclick="dec">-</button>
   </div>
 
-var inc = (s) => { s.count.v++ }
-var dec = (s) => { s.count.v-- }
+var inc = () => { count++ }
+var dec = () => { count-- }
 ```
 
 - **Plain values** (`var count = 0`) → reactive state (each becomes a signal)
-- **`render`** → called once at build time with a proxy, returns JSX (never shipped to browser)
+- **`render`** → returns JSX, compiled away at build time (never shipped)
 - **Functions** (`inc`, `dec`) → actions, bound with `on{event}` attributes
-- **`s.count.v`** → read/write the signal's value (`.v` getter/setter)
+- **Just use the variable** — `count++`, `count = 5`, read `count` — the compiler rewrites to signal access
+- The implicit `e` variable gives access to the DOM event in actions
 - Binding discovery, DOM paths, prop coercion — all resolved by the compiler
 
 ### Actions & event handling
@@ -67,7 +71,7 @@ var dec = (s) => { s.count.v-- }
 Bind events with `on{event}="action"` attributes. The event name and binding are resolved at build time — only the events your app actually uses get a single global listener via delegation. Zero per-element cost:
 
 ```tsx
-var render = (s) =>
+render = () =>
   <div>
     <button onclick="inc">+</button>
     <input oninput="typed" type="text" />
@@ -79,11 +83,11 @@ var render = (s) =>
 
 Any DOM event works — `click`, `input`, `change`, `submit`, `pointerdown`, `pointerup`, `keydown`, etc.
 
-Actions receive the component's state and the native event:
+Actions use plain variables. The implicit `e` gives access to the native DOM event:
 
 ```tsx
-var inc = (s, e) => { s.count.v++ }
-var typed = (s, e) => { s.query.v = e.target.value }
+var inc = () => { count++ }
+var typed = () => { query = e.target.value }
 ```
 
 ### Reactive attributes
@@ -98,23 +102,23 @@ var b = 128
 var preview = "background-color:rgb(128,128,128)"
 var hex = "#808080"
 
-var render = (s) =>
+render = () =>
   <div>
-    <div class="preview" style={s.preview}></div>
-    <p>{s.hex}</p>
+    <div class="preview" style={preview}></div>
+    <p>{hex}</p>
     <input type="range" min="0" max="255" data-c="r" oninput="slide" />
     <input type="range" min="0" max="255" data-c="g" oninput="slide" />
     <input type="range" min="0" max="255" data-c="b" oninput="slide" />
   </div>
 
-var slide = (s, e) => {
+var slide = () => {
   var ch = e.target.getAttribute("data-c")
   var val = +e.target.value
-  if (ch === "r") s.r.v = val
-  else if (ch === "g") s.g.v = val
-  else s.b.v = val
-  s.preview.v = "background-color:rgb(" + s.r.v + "," + s.g.v + "," + s.b.v + ")"
-  s.hex.v = "#" + [s.r.v, s.g.v, s.b.v].map(x => x.toString(16).padStart(2, "0")).join("")
+  if (ch === "r") r = val
+  else if (ch === "g") g = val
+  else b = val
+  preview = "background-color:rgb(" + r + "," + g + "," + b + ")"
+  hex = "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("")
 }
 ```
 
@@ -136,7 +140,7 @@ Pass initial state values as HTML attributes. The component's default state type
 // components/counter.tsx
 var count = 0                            // default value, also defines type
 
-var render = (s) => <p>{s.count}</p>
+render = () => <p>{count}</p>
 ```
 
 When `<counter- count="10">` is used, the count signal starts at `10` instead of `0`.
@@ -149,19 +153,19 @@ Components support `mount` and `unmount` hooks. These are **not** wired as event
 // components/timer.tsx
 var elapsed = 0
 
-var render = (s) => <p>{s.elapsed}s</p>
+render = () => <p>{elapsed}s</p>
 
-var mount = (s, el) => {
-  el._interval = setInterval(() => s.elapsed.v++, 1000)
+var mount = (el) => {
+  el._interval = setInterval(() => elapsed++, 1000)
 }
 
-var unmount = (s, el) => {
+var unmount = (el) => {
   clearInterval(el._interval)
 }
 ```
 
-- **`mount(s, el)`** — called after the component is connected to the DOM. Receives state and the host element.
-- **`unmount(s, el)`** — called when the component is removed from the DOM. Use it to clean up timers, listeners, etc.
+- **`mount(el)`** — called after the component is connected to the DOM. Receives the host element.
+- **`unmount(el)`** — called when the component is removed from the DOM. Use it to clean up timers, listeners, etc.
 
 When a component is removed, all its signal effects are automatically stopped and its instance is cleaned up.
 
@@ -179,6 +183,36 @@ route()
 ```
 
 Renders into `<main>` if present, otherwise `document.body`. 404 is built in. Intercepts `<a href="/">` clicks automatically.
+
+---
+
+## IDE Setup
+
+Add a `tsconfig.json` to your project root for full IDE support (autocomplete, type checking, no red squiggles):
+
+```jsonc
+{
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "micro",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "baseUrl": ".",
+        "paths": {
+            "micro/jsx-runtime": ["path/to/micro/jsx-runtime.ts"]
+        },
+        "noEmit": true
+    },
+    "include": ["micro.d.ts", "components/**/*.tsx"]
+}
+```
+
+And a `micro.d.ts` for compiler-provided globals:
+
+```ts
+declare var render: (...args: any[]) => any
+declare var e: Event & { target: HTMLInputElement }
+```
 
 ---
 

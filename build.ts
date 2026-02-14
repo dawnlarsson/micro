@@ -50,19 +50,56 @@ export function Fragment(p) { return flat(p.children); }
 // --- Component Parser ---
 
 function parseComponent(src) {
-    var lines = src.split("\n"), decls = [], cur = [];
+    var lines = src.split("\n"), decls = [], jsxLines = [], cur = [], inJsx = false;
+    var stateNames = [];  // track state variable names
+    var renderMode = "none"; // "none" | "bare" | "function"
 
     function flush() {
         if (!cur.length) return;
-        var joined = cur.join("\n")
+        var joined = cur.join("\n");
+        // Extract the name before transforming
+        var nameMatch = joined.match(/^(?:var|const|let)\s+(\w+)\s*=|^(\w+)\s*=/);
+        var varName = nameMatch ? (nameMatch[1] || nameMatch[2]) : null;
+
+        // Detect render = () => <jsx> pattern
+        if (varName === "render" && /=\s*\([^)]*\)\s*=>\s*</.test(joined)) {
+            // Extract the JSX body after the arrow
+            var arrowMatch = joined.match(/=\s*\([^)]*\)\s*=>\s*([\s\S]*)$/);
+            if (arrowMatch) {
+                jsxLines.push(arrowMatch[1]);
+                renderMode = "function";
+                cur = [];
+                return;
+            }
+        }
+
+        joined = joined
             .replace(/^(?:var|const|let)\s+/, "")
             .replace(/^(\w+)\s*=\s*/, "$1: ");
         decls.push("  " + joined);
+        // Track non-function state names (functions have => or function keyword in value)
+        if (varName && varName !== "render" && !/:\s*(\([^)]*\)|[\w]+)\s*=>/.test(joined) && !/:\s*function/.test(joined)) {
+            stateNames.push(varName);
+        }
         cur = [];
     }
 
     for (var line of lines) {
-        if (/^(?:(?:var|const|let)\s+)?\w+\s*=\s*/.test(line)) {
+        // Detect bare JSX: line starts with < (the template)
+        if (!inJsx && /^\s*</.test(line)) {
+            flush();
+            inJsx = true;
+            renderMode = "bare";
+            jsxLines.push(line);
+        } else if (inJsx) {
+            // JSX ends when we hit a new top-level var/function declaration or EOF
+            if (/^(?:(?:var|const|let)\s+)?\w+\s*=\s*/.test(line)) {
+                inJsx = false;
+                cur.push(line);
+            } else {
+                jsxLines.push(line);
+            }
+        } else if (/^(?:(?:var|const|let)\s+)?\w+\s*=\s*/.test(line)) {
             flush();
             cur.push(line);
         } else if (!cur.length && (line.trim() === "" || /^\/\//.test(line.trim()))) {
@@ -72,10 +109,64 @@ function parseComponent(src) {
         }
     }
     flush();
+
+    // Wrap JSX (bare or from render function) with proxy-compatible render
+    if (jsxLines.length) {
+        var jsxStr = jsxLines.join("\n");
+        if (stateNames.length) {
+            var id = stateNames.join("|");
+            // Rewrite {varName} to {s.varName} for proxy tracing
+            jsxStr = jsxStr.replace(new RegExp(`\\{(${id})\\}`, "g"), "{s.$1}");
+        }
+        decls.push("  render: (s) =>\n" + jsxStr);
+    }
+
     return `export default {\n${decls.join(",\n")}\n}`;
 }
 
 // --- Build ---
+
+// Rewrite signal references in action/mount/unmount function bodies.
+// Given signal names [count, name, ...], transforms:
+//   count      (read)  → count.v
+//   count++    (post)  → count.v++
+//   ++count    (pre)   → ++count.v
+//   count = x          → count.v = x
+//   count += x         → count.v += x
+// Skips string literals and template literals. Preserves property access.
+function rewriteSignals(fnStr: string, signals: string[]): string {
+    if (!signals.length) return fnStr;
+
+    // Tokenize: split into string/template chunks vs code chunks
+    // Match strings, template literals, and regex literals to skip them
+    var parts = fnStr.split(/((?:"(?:[^"\\]|\\.)*")|(?:'(?:[^'\\]|\\.)*')|(?:`(?:[^`\\]|\\.)*`))/);
+
+    var id = signals.join("|");
+    for (var i = 0; i < parts.length; i += 2) {
+        var code = parts[i];
+        // Assignment: count = / count += / count -= etc.
+        code = code.replace(new RegExp(`\\b(${id})\\s*([+\\-*/%&|^]?=(?!=))`, "g"), "$1.v $2");
+        // Pre-increment/decrement: ++count / --count
+        code = code.replace(new RegExp(`(\\+\\+|\\-\\-)(${id})\\b(?!\\.)`, "g"), "$1$2.v");
+        // Post-increment/decrement: count++ / count--
+        code = code.replace(new RegExp(`\\b(${id})(\\+\\+|\\-\\-)`, "g"), "$1.v$2");
+        // Read: bare identifier not followed by ., not preceded by ., not in assignment position
+        code = code.replace(new RegExp(`(?<!\\.)\\b(${id})\\b(?!\\s*[+\\-*/%&|^]?=(?!=))(?!\\.v\\b)(?!\\.)`, "g"), "$1.v");
+        parts[i] = code;
+    }
+    return parts.join("");
+}
+
+// Strip user's params from arrow/function, return just the body
+function extractBody(fnStr: string): string {
+    // Arrow: (s, e) => { ... } or (s, e) => expr or s => expr
+    var m = fnStr.match(/^(?:\w+|\([^)]*\))\s*=>\s*([\s\S]*)$/);
+    if (m) return m[1];
+    // function(s, e) { ... }
+    m = fnStr.match(/^function\s*\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
+    if (m) return `{${m[1]}}`;
+    return fnStr;
+}
 
 export async function build(cwd?) {
     cwd = cwd || process.cwd();
@@ -209,18 +300,32 @@ export async function build(cwd?) {
             `  A(d, ${ab.idx}, ${JSON.stringify(ab.attr)}, ${ab.key})`
         );
 
-        // actions (exclude mount/unmount)
+        // actions (exclude mount/unmount) — rewrite signal refs
         var actionEntries = Object.entries(d.actions)
             .filter(([k]) => k !== "mount" && k !== "unmount");
         var actionStr = actionEntries
-            .map(([k, fn]) => `${k}: ${(fn as Function).toString()}`).join(", ");
+            .map(([k, fn]) => {
+                var body = extractBody((fn as Function).toString());
+                body = rewriteSignals(body, stateKeys);
+                // If body uses `e` (the event), take it as param
+                var needsEvent = /\be\b/.test(body);
+                return `${k}: ${needsEvent ? "(e)" : "()"} => ${body}`;
+            }).join(", ");
 
-        // mount/unmount
+        // mount/unmount — rewrite signal refs, inject el param
         var mountLine = d.actions.mount
-            ? `  ;(${(d.actions.mount as Function).toString()})(r.s, el)`
+            ? (() => {
+                var body = extractBody((d.actions.mount as Function).toString());
+                body = rewriteSignals(body, stateKeys);
+                return `  ;((el) => ${body})(el)`;
+            })()
             : "";
         var unmountLine = d.actions.unmount
-            ? `, u: ${(d.actions.unmount as Function).toString()}`
+            ? (() => {
+                var body = extractBody((d.actions.unmount as Function).toString());
+                body = rewriteSignals(body, stateKeys);
+                return `, u: (el) => ${body}`;
+            })()
             : "";
 
         // assemble setup function body
@@ -248,7 +353,7 @@ export async function build(cwd?) {
         `  var el = ev.target, r = el\n` +
         `  while (r && !r._m) r = r.parentElement\n` +
         `  if (r) for (var a of el.attributes)\n` +
-        `    if (r._m.a[a.name] && E[a.name] === i) r._m.a[a.name](r._m.s, ev)\n` +
+        `    if (r._m.a[a.name] && E[a.name] === i) r._m.a[a.name](ev)\n` +
         `}))`
         : "";
 
