@@ -1,85 +1,49 @@
 //
-//      Dawning Micro V5, ultra tiny reactive components with signals.
+//      Dawning Micro V6 — signal runtime + shared helpers.
+//      Component logic is generated at build time.
 //
 //      By Dawn Larsson 2025 (github.com/dawnlarsson/micro)
 //      License: Apache-2.0 license
 //      www.dawning.dev
 //
 export var doc = document,
-        _c,
-        evs = ["click", "input", "change", "submit"],
-        evIdx = { I: 1, T: 1, S: 2, F: 3 },
-        signal = (v) => {
-                var subs = new Set;
-                return {
-                        get v() { _c && subs.add(_c); return v },
-                        set v(x) { v = x; for (var f of subs) f() }
-                }
+        S = (v, s = new Set) => ({
+                get v() { return v },
+                set v(x) { v = x; for (var f of s) f() },
+                s
+        }),
+        P = (el, k, s, t) => {
+                var a = el.getAttribute(k)
+                if (a != null) s.v = t === 1 ? +a : t === 2 ? a !== "false" : a
         },
-        effect = (fn) => { _c = fn; fn(); _c = null },
-        component = (name, state, tpl, actions) => {
-                var frag = doc.createElement("template");
-                frag.innerHTML = tpl;
-
+        B = (d, b) => {
+                var w = doc.createTreeWalker(d, 128), c = [], n
+                while (n = w.nextNode()) c.push(n)
+                b.forEach(r => {
+                        var t = doc.createTextNode(r[1].v)
+                        c[r[0]].replaceWith(t)
+                        r[1].s.add(() => { t.nodeValue = r[1].v })
+                })
+        },
+        A = (d, i, a, s) => {
+                var e = d.querySelector("[data-_" + i + "]")
+                e.removeAttribute("data-_" + i)
+                s.s.add(() => { e.setAttribute(a, s.v) })
+        },
+        E = {},
+        C = (name, tpl, setup) => {
+                var f = doc.createElement("template")
+                f.innerHTML = tpl
                 customElements.define(name + "-", class extends HTMLElement {
                         connectedCallback() {
-                                var s = {}, k;
-
-                                for (k in state) s[k] = signal(Array.isArray(state[k]) ? [...state[k]] : state[k]);
-
-                                for (k of this.getAttributeNames()) {
-                                        var a = this.getAttribute(k);
-                                        if (s[k]) s[k].v = state[k] === +state[k] ? +a
-                                                : state[k] === !!state[k] ? a !== "false" : a;
-                                }
-
-                                var dom = frag.content.cloneNode(true),
-                                        w = doc.createTreeWalker(dom, 4), p, m, r = [], nodes = [],
-                                        re = /\$\$(\w+)\$\$/;
-
-                                while (p = w.nextNode()) nodes.push(p);
-
-                                for (p of nodes) {
-                                        var parts = p.data.split(/(\$\$\w+\$\$)/);
-                                        if (parts.length < 2) continue;
-                                        for (var part of parts) {
-                                                var n = doc.createTextNode(part);
-                                                m = part.match(re);
-                                                p.parentNode.insertBefore(n, p);
-                                                m && s[m[1]] && r.push([n, m[1]])
-                                        }
-                                        p.remove()
-                                }
-
-                                for (var el of dom.querySelectorAll("*"))
-                                        for (var a of el.attributes)
-                                                if ((m = a.value.match(re)) && s[m[1]])
-                                                        r.push([a, m[1]]);
-
-                                var alive = 1;
-                                for (let [p, k] of r)
-                                        effect(() => { if (alive) p.nodeValue = s[k].v });
-
-                                this.appendChild(dom);
-                                this._m = { s, actions, kill: () => alive = 0 };
-                                actions.mount?.(s, this);
+                                var d = f.content.cloneNode(true)
+                                this._m = setup(d, this)
+                                this.appendChild(d)
                         }
-
                         disconnectedCallback() {
-                                if (!this._m) return;
-                                this._m.kill();
-                                actions.unmount?.(this._m.s, this);
+                                if (!this._m) return
+                                for (var k in this._m.s) this._m.s[k].s.clear()
+                                this._m.u?.(this._m.s, this)
                         }
                 })
         }
-
-for (let ev of evs)
-        doc.addEventListener(ev, e => {
-                var el = e.target, tag = el.tagName, r = el;
-                while (r && !r._m) r = r.parentElement;
-                if (!r) return;
-                if (ev !== (evs[evIdx[tag[0]]] || evs[0])) return;
-                for (var a of el.attributes)
-                        if (r._m.actions[a.name] && !/^(un)?mount$/.test(a.name))
-                                return r._m.actions[a.name](r._m.s, e);
-        });

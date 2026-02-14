@@ -1,6 +1,9 @@
 var rv = 255
 var gv = 0
 var bv = 0
+var hv = 0
+var sv = 100
+var vv = 100
 var hex = "#FF0000"
 var swatch = "background:#FF0000"
 var hBg = ""
@@ -12,30 +15,30 @@ var render = (s) =>
         <div class="picker-swatch" style={s.swatch}></div>
         <p class="hex-value">{s.hex}</p>
         <p class="rgb-readout"><span class="ch-r">R {s.rv}</span>  <span class="ch-g">G {s.gv}</span>  <span class="ch-b">B {s.bv}</span></p>
-        <label class="slider-row"><span class="ch-label">H</span><input type="range" min="0" max="360" value="0" class="hue-slider" data-c="h" slide /><span class="ch-val">{s.rv}</span></label>
-        <label class="slider-row"><span class="ch-label">S</span><div class="track" style={s.sBg}><input type="range" min="0" max="100" value="100" data-c="s" slide /></div><span class="ch-val">{s.gv}</span></label>
-        <label class="slider-row"><span class="ch-label">V</span><div class="track" style={s.vBg}><input type="range" min="0" max="100" value="100" data-c="v" slide /></div><span class="ch-val">{s.bv}</span></label>
+        <label class="slider-row"><span class="ch-label">H</span><input type="range" min="0" max="360" value="0" class="hue-slider" data-c="h" oninput="slide" /><span class="ch-val">{s.hv}</span></label>
+        <label class="slider-row"><span class="ch-label">S</span><div class="track" style={s.sBg}><input type="range" min="0" max="100" value="100" data-c="s" oninput="slide" /></div><span class="ch-val">{s.sv}</span></label>
+        <label class="slider-row"><span class="ch-label">V</span><div class="track" style={s.vBg}><input type="range" min="0" max="100" value="100" data-c="v" oninput="slide" /></div><span class="ch-val">{s.vv}</span></label>
     </div>
 
 var slide = (s, e) => {
     var c = e.target.getAttribute("data-c")
-    var hv = c === "h" ? +e.target.value : s._h || 0
-    var sv = c === "s" ? +e.target.value : s._s ?? 100
-    var vv = c === "v" ? +e.target.value : s._v ?? 100
-    s._h = hv; s._s = sv; s._v = vv
+    var h = c === "h" ? +e.target.value : s.hv.v
+    var st = c === "s" ? +e.target.value : s.sv.v
+    var vl = c === "v" ? +e.target.value : s.vv.v
+    s.hv.v = h; s.sv.v = st; s.vv.v = vl
 
-    var h = hv / 60, st = sv / 100, vl = vv / 100
-    var cv = vl * st, x = cv * (1 - Math.abs(h % 2 - 1)), m = vl - cv
+    var hp = h / 60, sf = st / 100, vf = vl / 100
+    var cv = vf * sf, x = cv * (1 - Math.abs(hp % 2 - 1)), m = vf - cv
     var r, g, b
-    h < 1 ? (r = cv, g = x, b = 0) : h < 2 ? (r = x, g = cv, b = 0) : h < 3 ? (r = 0, g = cv, b = x)
-        : h < 4 ? (r = 0, g = x, b = cv) : h < 5 ? (r = x, g = 0, b = cv) : (r = cv, g = 0, b = x)
+    hp < 1 ? (r = cv, g = x, b = 0) : hp < 2 ? (r = x, g = cv, b = 0) : hp < 3 ? (r = 0, g = cv, b = x)
+        : hp < 4 ? (r = 0, g = x, b = cv) : hp < 5 ? (r = x, g = 0, b = cv) : (r = cv, g = 0, b = x)
     r = Math.round((r + m) * 255); g = Math.round((g + m) * 255); b = Math.round((b + m) * 255)
 
     s.rv.v = r; s.gv.v = g; s.bv.v = b
     s.hex.v = "#" + [r, g, b].map(c => c.toString(16).padStart(2, "0").toUpperCase()).join("")
     s.swatch.v = "background:" + s.hex.v
 
-    var hh = hv, hr = "hsl(" + hh + ",100%,50%)"
-    s.sBg.v = "background:linear-gradient(to right,hsl(" + hh + ",0%," + vv / 2 + "%)," + hr + ")"
-    s.vBg.v = "background:linear-gradient(to right,#000,hsl(" + hh + "," + sv + "%,50%))"
+    var hr = "hsl(" + h + ",100%,50%)"
+    s.sBg.v = "background:linear-gradient(to right,hsl(" + h + ",0%," + vl / 2 + "%)," + hr + ")"
+    s.vBg.v = "background:linear-gradient(to right,#000,hsl(" + h + "," + st + "%,50%))"
 }

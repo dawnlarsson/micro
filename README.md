@@ -7,10 +7,10 @@
 
 </div>
 
-Ultra tiny reactive framework with signals. **350 bytes** minified (**271 bytes** gzipped) runtime. Zero config. Bun only.
-No virtual DOM. No diffing. No hydration.
+Ultra tiny reactive framework with signals. **~860 byte** runtime (**~520 bytes** gzipped). Zero config. Bun only.
+No virtual DOM. No diffing. No hydration. No runtime template parsing.
 
-Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. JSX is compiled away at build time (never shipped to the browser). State binds to the DOM through signals — text nodes and attributes that reference state are updated automatically.
+Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. The compiler does the heavy lifting: JSX is compiled away, signal bindings are resolved, DOM paths are generated, and event delegation is tailored — all at build time. The browser runtime is six shared helpers: signal constructor, prop coercion, text binding, attribute binding, event map, and component registration.
 
 ---
 
@@ -18,20 +18,20 @@ Components are flat `.tsx` files — top-level assignments become state, functio
 
 ```tsx
 // components/counter.tsx
-count = 0
-render = (s) => <p>{s.count} <button inc>+</button> <button dec>-</button></p>
-inc = (s) => { s.count.v++ }
-dec = (s) => { s.count.v-- }
+var count = 0
+var render = (s) => <p>{s.count} <button onclick="inc">+</button> <button onclick="dec">-</button></p>
+var inc = (s) => { s.count.v++ }
+var dec = (s) => { s.count.v-- }
 ```
 
-Output: **~1.5 KB** minified, **923 bytes** gzipped (runtime + component, entire app)
+Output: **~1.2 KB** minified, **~720 bytes** gzipped (runtime + component, entire app)
 
 ### CLI
 
 ```sh
-bun micro/build build      # compile components → dist/
-bun micro/build dev        # build + serve on :3000
-bun micro/build serve      # serve dist/ only
+bun micro/build.ts build      # compile components → dist/
+bun micro/build.ts dev         # build + serve on :3000
+bun micro/build.ts serve       # serve dist/ only
 ```
 
 ---
@@ -43,52 +43,47 @@ A component file is a flat `.tsx` where the filename becomes the tag name (`coun
 ```tsx
 // components/counter.tsx
 
-count = 0
+var count = 0
 
-render = (s) =>
+var render = (s) =>
   <div>
     <p>{s.count}</p>
-    <button inc>+</button>
-    <button dec>-</button>
+    <button onclick="inc">+</button>
+    <button onclick="dec">-</button>
   </div>
 
-inc = (s) => { s.count.v++ }
-dec = (s) => { s.count.v-- }
+var inc = (s) => { s.count.v++ }
+var dec = (s) => { s.count.v-- }
 ```
 
-- **Plain values** (`count = 0`) → reactive state (each becomes a signal)
-- **`render`** → called once at build time with a proxy, returns JSX
-- **Functions** (`inc`, `dec`) → actions, dispatched by attribute name
+- **Plain values** (`var count = 0`) → reactive state (each becomes a signal)
+- **`render`** → called once at build time with a proxy, returns JSX (never shipped to browser)
+- **Functions** (`inc`, `dec`) → actions, bound with `on{event}` attributes
 - **`s.count.v`** → read/write the signal's value (`.v` getter/setter)
+- Binding discovery, DOM paths, prop coercion — all resolved by the compiler
 
 ### Actions & event handling
 
-Actions are dispatched by matching an element's attribute name to an action function. Just add the action name as an attribute on any element:
+Bind events with `on{event}="action"` attributes. The event name and binding are resolved at build time — only the events your app actually uses get a single global listener via delegation. Zero per-element cost:
 
 ```tsx
-render = (s) =>
+var render = (s) =>
   <div>
-    <button inc>+</button>         {/* click */}
-    <input oninput type="text" />  {/* input */}
-    <select onpick>...</select>    {/* change */}
-    <form onsend>...</form>        {/* submit */}
+    <button onclick="inc">+</button>
+    <input oninput="typed" type="text" />
+    <select onchange="pick">...</select>
+    <form onsubmit="send">...</form>
+    <div onpointerdown="grab" onpointerup="release" />
   </div>
 ```
 
-Event types are inferred globally via delegation — one listener per event type on the document, zero per-element cost:
-
-| Element | Event |
-|---------|-------|
-| `<input>`, `<textarea>` | `input` |
-| `<select>` | `change` |
-| `<form>` | `submit` |
-| Everything else | `click` |
+Any DOM event works — `click`, `input`, `change`, `submit`, `pointerdown`, `pointerup`, `keydown`, etc.
 
 Actions receive the component's state and the native event:
 
 ```tsx
-inc = (s, e) => { s.count.v++ }
-oninput = (s, e) => { s.query.v = e.target.value }
+var inc = (s, e) => { s.count.v++ }
+var typed = (s, e) => { s.query.v = e.target.value }
 ```
 
 ### Reactive attributes
@@ -97,23 +92,27 @@ Attributes that reference state are reactive — they update automatically when 
 
 ```tsx
 // components/mixer.tsx
-r = 128
-g = 128
-b = 128
-preview = "background-color:rgb(128,128,128)"
-hex = "#808080"
+var r = 128
+var g = 128
+var b = 128
+var preview = "background-color:rgb(128,128,128)"
+var hex = "#808080"
 
-render = (s) =>
+var render = (s) =>
   <div>
     <div class="preview" style={s.preview}></div>
     <p>{s.hex}</p>
-    <input type="range" min="0" max="255" data-c="r" slide />
-    <input type="range" min="0" max="255" data-c="g" slide />
-    <input type="range" min="0" max="255" data-c="b" slide />
+    <input type="range" min="0" max="255" data-c="r" oninput="slide" />
+    <input type="range" min="0" max="255" data-c="g" oninput="slide" />
+    <input type="range" min="0" max="255" data-c="b" oninput="slide" />
   </div>
 
-slide = (s, e) => {
-  s[e.target.getAttribute("data-c")].v = +e.target.value
+var slide = (s, e) => {
+  var ch = e.target.getAttribute("data-c")
+  var val = +e.target.value
+  if (ch === "r") s.r.v = val
+  else if (ch === "g") s.g.v = val
+  else s.b.v = val
   s.preview.v = "background-color:rgb(" + s.r.v + "," + s.g.v + "," + s.b.v + ")"
   s.hex.v = "#" + [s.r.v, s.g.v, s.b.v].map(x => x.toString(16).padStart(2, "0")).join("")
 }
@@ -135,9 +134,9 @@ Pass initial state values as HTML attributes. The component's default state type
 
 ```tsx
 // components/counter.tsx
-count = 0                                // default value, also defines type
+var count = 0                            // default value, also defines type
 
-render = (s) => <p>{s.count}</p>
+var render = (s) => <p>{s.count}</p>
 ```
 
 When `<counter- count="10">` is used, the count signal starts at `10` instead of `0`.
@@ -148,15 +147,15 @@ Components support `mount` and `unmount` hooks. These are **not** wired as event
 
 ```tsx
 // components/timer.tsx
-elapsed = 0
+var elapsed = 0
 
-render = (s) => <p>{s.elapsed}s</p>
+var render = (s) => <p>{s.elapsed}s</p>
 
-mount = (s, el) => {
+var mount = (s, el) => {
   el._interval = setInterval(() => s.elapsed.v++, 1000)
 }
 
-unmount = (s, el) => {
+var unmount = (s, el) => {
   clearInterval(el._interval)
 }
 ```

@@ -87,17 +87,12 @@ export async function build(cwd?) {
     console.log("micro build\n");
 
     var jsxPath = await ensureJSXRuntime(cwd);
-    var components = [], names = [];
+    var allEvents = new Set(), componentData = [], names = [];
 
     for await (var file of new Glob("*.tsx").scan(componentsDir)) {
         var name = basename(file, ".tsx");
         var src = await Bun.file(join(componentsDir, file)).text();
-        var valid = `/** @jsxImportSource ${cwd} */\n` +
-            `import { jsx, jsxs, Fragment } from "${jsxPath.replace(/\.ts$/, "")}";\n` +
-            parseComponent(src);
-
-        // swap jsxImportSource for direct import approach
-        valid = parseComponent(src);
+        var valid = parseComponent(src);
         var tmp = join(cwd, `.micro_tmp_${name}.tsx`);
         await Bun.write(tmp, `/** @jsxImportSource ${cwd}/.micro_jsx */\n` + valid);
 
@@ -117,7 +112,7 @@ export async function build(cwd?) {
                 typeof v === "function" ? actions[k] = v : state[k] = v;
             }
 
-            // trace render with proxy
+            // trace render with proxy — signal refs become $$key$$
             var tpl = render(new Proxy(state, {
                 get: (_, k) => `$$${String(k)}$$`
             }));
@@ -127,15 +122,37 @@ export async function build(cwd?) {
                 continue;
             }
 
-            var actionStr = Object.entries(actions)
-                .map(([k, fn]) => `${k}:${fn.toString()}`).join(",");
+            // 1. parse event bindings: onclick="action" → bare action attr
+            var evMap = {};
+            tpl = tpl.replace(/\son(\w+)="(\w+)"/g, (_, ev, act) => {
+                evMap[act] = ev;
+                allEvents.add(ev);
+                return ` ${act}`;
+            });
 
-            components.push(
-                `component(${JSON.stringify(name)},` +
-                `${JSON.stringify(state)},` +
-                `\`${tpl.replace(/`/g, "\\`")}\`,` +
-                `{${actionStr}})`
-            );
+            // 2. parse attribute bindings: attr="$$key$$" → initial value + data-_ marker
+            var attrBindings = [], attrIdx = 0;
+            tpl = tpl.replace(/([\w-]+)="\$\$(\w+)\$\$"/g, (_, attr, key) => {
+                attrBindings.push({ idx: attrIdx, attr, key });
+                var initial = state[key] != null ? String(state[key]).replace(/"/g, '&quot;') : '';
+                return `${attr}="${initial}" data-_${attrIdx++}`;
+            });
+
+            // 3. parse text bindings: $$key$$ → null char markers
+            var textBindings = [], textIdx = 0;
+            tpl = tpl.replace(/\$\$(\w+)\$\$/g, (_, key) => {
+                textBindings.push({ idx: textIdx++, key });
+                return `<!---->`;
+            });
+
+            // 4. minify HTML template
+            tpl = tpl
+                .replace(/\s+/g, " ")                        // collapse whitespace
+                .replace(/> </g, "><")                        // remove space between tags
+                .replace(/="([\w\-#]+)"/g, "=$1")            // unquote simple attr values
+                .trim();
+
+            componentData.push({ name, state, actions, tpl, evMap, textBindings, attrBindings });
             names.push(name);
             console.log(`  + ${name}`);
         } finally {
@@ -149,16 +166,93 @@ export async function build(cwd?) {
     await unlink(join(cwd, ".micro_jsx", "jsx-dev-runtime.ts")).catch(() => { });
     await import("fs/promises").then(f => f.rm(join(cwd, ".micro_jsx"), { recursive: true })).catch(() => { });
 
-    // bundle: micro.ts runtime, minified
+    // bundle: micro.ts runtime (just S and doc)
     var microSrc = await Bun.file(join(microDir, "micro.ts")).text();
-    // strip comments and exports for browser bundle
     var runtimeSrc = microSrc
         .replace(/\/\/.*$/gm, "")
         .replace(/^export\s+/gm, "")
-        .replace(/:\s*number/g, "")
         .trim();
 
-    var entrySrc = runtimeSrc + "\n" + components.join(";\n") + ";";
+    // --- generate per-component code ---
+    var eventList = [...allEvents];
+
+    // global event map: action → event index
+    var globalEvMap = {};
+    for (var d of componentData)
+        for (var [act, ev] of Object.entries(d.evMap))
+            globalEvMap[act] = eventList.indexOf(ev as string);
+
+    var componentCodes = componentData.map((d) => {
+        var stateKeys = Object.keys(d.state);
+
+        // state declarations: count = S(0)
+        var stateDecls = stateKeys.map(k => {
+            var v = d.state[k];
+            var init = Array.isArray(v) ? `[...${JSON.stringify(v)}]` : JSON.stringify(v);
+            return `${k} = S(${init})`;
+        });
+
+        // prop coercion: P(el, key, signal, type) — 0=string, 1=number, 2=bool
+        var propLines = stateKeys.map(k => {
+            var v = d.state[k];
+            var t = typeof v === "number" ? 1 : typeof v === "boolean" ? 2 : 0;
+            return `  P(el, ${JSON.stringify(k)}, ${k}, ${t})`;
+        });
+
+        // text bindings → B(d, [[idx, signal], ...])
+        var textLine = d.textBindings.length
+            ? `  B(d, [${d.textBindings.map(tb => `[${tb.idx}, ${tb.key}]`).join(", ")}])`
+            : "";
+
+        // attr bindings → A(d, i, attr, signal)
+        var attrLines = d.attrBindings.map(ab =>
+            `  A(d, ${ab.idx}, ${JSON.stringify(ab.attr)}, ${ab.key})`
+        );
+
+        // actions (exclude mount/unmount)
+        var actionEntries = Object.entries(d.actions)
+            .filter(([k]) => k !== "mount" && k !== "unmount");
+        var actionStr = actionEntries
+            .map(([k, fn]) => `${k}: ${(fn as Function).toString()}`).join(", ");
+
+        // mount/unmount
+        var mountLine = d.actions.mount
+            ? `  ;(${(d.actions.mount as Function).toString()})(r.s, el)`
+            : "";
+        var unmountLine = d.actions.unmount
+            ? `, u: ${(d.actions.unmount as Function).toString()}`
+            : "";
+
+        // assemble setup function body
+        var body = [];
+        if (stateDecls.length) body.push(`  var ${stateDecls.join(", ")}`);
+        body.push(...propLines);
+        if (textLine) body.push(textLine);
+        body.push(...attrLines);
+        body.push(`  var r = {s: {${stateKeys.join(", ")}}, a: {${actionStr}}${unmountLine}}`);
+        if (mountLine) body.push(mountLine);
+        body.push("  return r");
+
+        var tplStr = d.tpl.replace(/`/g, "\\`");
+        return `C(${JSON.stringify(d.name)}, \`${tplStr}\`, (d, el) => {\n${body.join("\n")}\n})`;
+    });
+
+    // global event map assignment
+    var evMapCode = Object.keys(globalEvMap).length
+        ? `Object.assign(E, ${JSON.stringify(globalEvMap)})`
+        : "";
+
+    // --- event delegation — only events actually used ---
+    var delegationCode = eventList.length
+        ? `;${JSON.stringify(eventList)}.forEach((e, i) => doc.addEventListener(e, ev => {\n` +
+        `  var el = ev.target, r = el\n` +
+        `  while (r && !r._m) r = r.parentElement\n` +
+        `  if (r) for (var a of el.attributes)\n` +
+        `    if (r._m.a[a.name] && E[a.name] === i) r._m.a[a.name](r._m.s, ev)\n` +
+        `}))`
+        : "";
+
+    var entrySrc = runtimeSrc + "\n\n" + componentCodes.join("\n\n") + "\n\n" + evMapCode + "\n\n" + delegationCode;
 
     // write + minify via Bun.build
     await mkdir(distDir, { recursive: true });

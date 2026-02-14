@@ -6,7 +6,7 @@ var render = (s) =>
     <div class="card">
         <h2>Timer</h2>
         <p class={s.status}>{s.elapsed}s</p>
-        <button toggle>Pause / Resume</button>
+        <button onclick="toggle">Pause / Resume</button>
     </div>
 
 var toggle = (s) => {
