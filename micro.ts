@@ -5,10 +5,9 @@
 //      License: Apache-2.0 license
 //      www.dawning.dev
 //
-export var instances = {},
-        instance_count: number = 0,
-        doc = document,
-        _c;
+export var doc = document,
+        _c,
+        evMap = { INPUT: "input", TEXTAREA: "input", SELECT: "change", FORM: "submit" };
 
 export function signal(v) {
         var subs = new Set;
@@ -25,16 +24,16 @@ export function component(name, state, tpl, actions) {
         frag.innerHTML = tpl;
 
         customElements.define(name + "-", class extends HTMLElement {
-                _m;
                 connectedCallback() {
-                        var id = name + instance_count++, s = {}, k;
+                        var s = {}, k;
 
                         for (k in state) s[k] = signal(Array.isArray(state[k]) ? [...state[k]] : state[k]);
 
-                        for (k of this.getAttributeNames())
-                                if (s[k]) s[k].v = typeof state[k] === "number" ? +this.getAttribute(k)
-                                        : typeof state[k] === "boolean" ? this.getAttribute(k) !== "false"
-                                                : this.getAttribute(k);
+                        for (k of this.getAttributeNames()) {
+                                var a = this.getAttribute(k);
+                                if (s[k]) s[k].v = state[k] === +state[k] ? +a
+                                        : state[k] === !!state[k] ? a !== "false" : a;
+                        }
 
                         var dom = frag.content.cloneNode(true),
                                 w = doc.createTreeWalker(dom, 4), p, r = [], nodes = [];
@@ -52,41 +51,30 @@ export function component(name, state, tpl, actions) {
                                 p.remove()
                         }
 
-                        var alive = true;
-                        for (var [p, k] of r)
-                                ((p, k) => effect(() => { if (alive) p.data = "" + s[k].v }))(p, k);
+                        var alive = 1;
+                        for (let [p, k] of r)
+                                effect(() => { if (alive) p.data = s[k].v });
 
                         this.appendChild(dom);
-                        this.setAttribute("_", id);
-                        instances[id] = { s, actions };
-                        this._m = { s, kill: () => alive = false };
+                        this._m = { s, actions, kill: () => alive = 0 };
                         actions.mount?.(s, this);
                 }
 
                 disconnectedCallback() {
                         if (!this._m) return;
                         this._m.kill();
-                        var id = this.getAttribute("_");
-                        if (id) delete instances[id];
                         actions.unmount?.(this._m.s, this);
                 }
         })
 }
 
-function handle(ev) {
+for (let ev of ["click", "input", "change", "submit"])
         doc.addEventListener(ev, e => {
-                var el = e.target, root = el.closest("[_]"), tag = el.tagName;
-                if (!root) return;
-                var inst = instances[root.getAttribute("_")];
-                if (!inst) return;
-                var expect = /^(input|textarea)$/i.test(tag) ? "input"
-                        : /^select$/i.test(tag) ? "change"
-                                : /^form$/i.test(tag) ? "submit" : "click";
-                if (ev !== expect) return;
+                var el = e.target, tag = el.tagName, r = el;
+                while (r && !r._m) r = r.parentElement;
+                if (!r) return;
+                if (ev !== (evMap[tag] || "click")) return;
                 for (var a of el.attributes)
-                        if (inst.actions[a.name] && a.name !== "mount" && a.name !== "unmount")
-                                return inst.actions[a.name](inst.s, e);
-        })
-}
-
-handle("click"); handle("input"); handle("change"); handle("submit");
+                        if (r._m.actions[a.name] && !/^(un)?mount$/.test(a.name))
+                                return r._m.actions[a.name](r._m.s, e);
+        });

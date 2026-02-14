@@ -1,7 +1,6 @@
-// @ts-nocheck
-count = 0
+var count = 0
 
-render = (s) =>
+var render = (s) =>
     <div class="card">
         <h2>Counter</h2>
         <p class="value">{s.count}</p>
@@ -10,6 +9,6 @@ render = (s) =>
         <button reset>Reset</button>
     </div>
 
-inc = (s) => { s.count.v++ }
-dec = (s) => { s.count.v-- }
-reset = (s) => { s.count.v = 0 }
+var inc = (s) => { s.count.v++ }
+var dec = (s) => { s.count.v-- }
+var reset = (s) => { s.count.v = 0 }

@@ -30,6 +30,7 @@
     "micro.ts",
     "router.ts",
     "build.ts",
+    "jsx-runtime.ts",
     "README.md",
     "LICENSE"
   ]
