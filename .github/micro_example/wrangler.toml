@@ -1,4 +1,4 @@
-name = "micro-example"
+name = "micro"
 main = "worker/worker.ts"
 compatibility_date = "2026-02-01"
 
