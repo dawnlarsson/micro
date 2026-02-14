@@ -34,7 +34,8 @@ export var doc = document,
                                 }
 
                                 var dom = frag.content.cloneNode(true),
-                                        w = doc.createTreeWalker(dom, 4), p, r = [], nodes = [];
+                                        w = doc.createTreeWalker(dom, 4), p, m, r = [], nodes = [],
+                                        re = /\$\$(\w+)\$\$/;
 
                                 while (p = w.nextNode()) nodes.push(p);
 
@@ -42,16 +43,22 @@ export var doc = document,
                                         var parts = p.data.split(/(\$\$\w+\$\$)/);
                                         if (parts.length < 2) continue;
                                         for (var part of parts) {
-                                                var n = doc.createTextNode(part), m = part.match(/^\$\$(\w+)\$\$$/);
+                                                var n = doc.createTextNode(part);
+                                                m = part.match(re);
                                                 p.parentNode.insertBefore(n, p);
                                                 m && s[m[1]] && r.push([n, m[1]])
                                         }
                                         p.remove()
                                 }
 
+                                for (var el of dom.querySelectorAll("*"))
+                                        for (var a of el.attributes)
+                                                if ((m = a.value.match(re)) && s[m[1]])
+                                                        r.push([a, m[1]]);
+
                                 var alive = 1;
                                 for (let [p, k] of r)
-                                        effect(() => { if (alive) p.data = s[k].v });
+                                        effect(() => { if (alive) p.nodeValue = s[k].v });
 
                                 this.appendChild(dom);
                                 this._m = { s, actions, kill: () => alive = 0 };

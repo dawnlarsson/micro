@@ -109,6 +109,129 @@
             flex-wrap: wrap;
             justify-content: center;
         }
+
+        .running {
+            color: #4ade80;
+        }
+
+        .paused {
+            color: #e8a735;
+        }
+
+        .picker-card {
+            min-width: 280px;
+        }
+
+        .picker-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .hex-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: ui-monospace, monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .rgb-readout {
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: ui-monospace, monospace;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            font-family: ui-monospace, monospace;
+        }
+
+        .ch-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #666;
+            width: 1rem;
+            text-align: center;
+        }
+
+        .ch-val {
+            font-size: 0.75rem;
+            color: #888;
+            width: 2rem;
+            text-align: right;
+        }
+
+        .track {
+            flex: 1;
+            height: 14px;
+            border-radius: 7px;
+            position: relative;
+        }
+
+        .track input[type="range"],
+        .hue-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 14px;
+            border-radius: 7px;
+            background: transparent;
+            outline: none;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .hue-slider {
+            flex: 1;
+            background: linear-gradient(to right,
+                    #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+        }
+
+        .track input[type="range"]::-webkit-slider-thumb,
+        .hue-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #333;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            cursor: grab;
+        }
+
+        .track input[type="range"]::-moz-range-thumb,
+        .hue-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #333;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            cursor: grab;
+        }
+
+        .track input[type="range"] {
+            position: absolute;
+            inset: 0;
+        }
+
+        .ch-r {
+            color: #f87171;
+        }
+
+        .ch-g {
+            color: #4ade80;
+        }
+
+        .ch-b {
+            color: #60a5fa;
+        }
     </style>
 </head>
 
@@ -118,15 +241,10 @@
     <p class="subtitle">Ultra tiny reactive framework with signals</p>
 
     <div class="grid">
+        <mixer-></mixer->
         <counter-></counter->
-
-        <counter- count="100"></counter->
-
-        <greeter-></greeter->
-
-        <greeter- name="Dawn"></greeter->
-
         <timer-></timer->
+        <greeter- name="There"></greeter->
     </div>
 
     <script src="/app.js"></script>

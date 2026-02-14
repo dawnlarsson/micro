@@ -7,10 +7,10 @@
 
 </div>
 
-Ultra tiny reactive framework with signals. **~400 bytes** runtime. Zero config. Bun only.
-No virtual DOM. No diffing. No hydration. No framework.
+Ultra tiny reactive framework with signals. **350 bytes** minified (**271 bytes** gzipped) runtime. Zero config. Bun only.
+No virtual DOM. No diffing. No hydration.
 
-Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. JSX is compiled away at build time (never shipped to the browser). State binds to the DOM through signals — only the text nodes that changed get updated.
+Components are flat `.tsx` files — top-level assignments become state, functions become actions, `render` returns JSX. JSX is compiled away at build time (never shipped to the browser). State binds to the DOM through signals — text nodes and attributes that reference state are updated automatically.
 
 ---
 
@@ -24,7 +24,7 @@ inc = (s) => { s.count.v++ }
 dec = (s) => { s.count.v-- }
 ```
 
-Output: **~1 KB** minified (runtime + component, entire app)
+Output: **~1.5 KB** minified, **923 bytes** gzipped (runtime + component, entire app)
 
 ### CLI
 
@@ -90,6 +90,38 @@ Actions receive the component's state and the native event:
 inc = (s, e) => { s.count.v++ }
 oninput = (s, e) => { s.query.v = e.target.value }
 ```
+
+### Reactive attributes
+
+Attributes that reference state are reactive — they update automatically when the signal changes. Use them for dynamic classes, styles, or any HTML attribute:
+
+```tsx
+// components/mixer.tsx
+r = 128
+g = 128
+b = 128
+preview = "background-color:rgb(128,128,128)"
+hex = "#808080"
+
+render = (s) =>
+  <div>
+    <div class="preview" style={s.preview}></div>
+    <p>{s.hex}</p>
+    <input type="range" min="0" max="255" data-c="r" slide />
+    <input type="range" min="0" max="255" data-c="g" slide />
+    <input type="range" min="0" max="255" data-c="b" slide />
+  </div>
+
+slide = (s, e) => {
+  s[e.target.getAttribute("data-c")].v = +e.target.value
+  s.preview.v = "background-color:rgb(" + s.r.v + "," + s.g.v + "," + s.b.v + ")"
+  s.hex.v = "#" + [s.r.v, s.g.v, s.b.v].map(x => x.toString(16).padStart(2, "0")).join("")
+}
+```
+
+Dragging any slider updates the `style` attribute on the preview div and the hex text — in real time. Works with any attribute: `class`, `style`, `href`, `src`, `placeholder`, `title`, etc.
+
+Both text content and attributes use the same signal binding mechanism.
 
 ### Props / attributes
 
