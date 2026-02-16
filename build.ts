@@ -1,7 +1,3 @@
-//
-//      Dawning Micro V5 — build tool
-//      All-in-one: JSX runtime, component parser, bundler, dev server
-//
 //      By Dawn Larsson 2025 (github.com/dawnlarsson/micro)
 //      License: Apache-2.0 license
 //      www.dawning.dev
@@ -339,7 +335,7 @@ export async function build(cwd?) {
         body.push("  return r");
 
         var tplStr = d.tpl.replace(/`/g, "\\`");
-        return `C(${JSON.stringify(d.name)}, \`${tplStr}\`, (d, el) => {\n${body.join("\n")}\n})`;
+        return `C(${JSON.stringify(d.name)}, \`${tplStr}\`, ${JSON.stringify(stateKeys)}, (d, el) => {\n${body.join("\n")}\n})`;
     });
 
     // global event map assignment

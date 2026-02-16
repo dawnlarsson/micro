@@ -1,7 +1,3 @@
-//
-//      Dawning Micro V6 — signal runtime + shared helpers.
-//      Component logic is generated at build time.
-//
 //      By Dawn Larsson 2025 (github.com/dawnlarsson/micro)
 //      License: Apache-2.0 license
 //      www.dawning.dev
@@ -31,10 +27,17 @@ export var doc = document,
                 s.s.add(() => { e.setAttribute(a, s.v) })
         },
         E = {},
-        C = (name, tpl, setup) => {
+        C = (name, tpl, k, setup) => {
                 var f = doc.createElement("template")
                 f.innerHTML = tpl
                 customElements.define(name + "-", class extends HTMLElement {
+                        static get observedAttributes() { return k }
+                        attributeChangedCallback(n, o, v) {
+                                if (this._m && this._m.s[n]) {
+                                        var s = this._m.s[n], t = typeof s.v
+                                        s.v = t === "number" ? +v : t === "boolean" ? v !== "false" : v
+                                }
+                        }
                         connectedCallback() {
                                 var d = f.content.cloneNode(true)
                                 this._m = setup(d, this)

@@ -126,24 +126,41 @@ Dragging any slider updates the `style` attribute on the preview div and the hex
 
 Both text content and attributes use the same signal binding mechanism.
 
-### Props / attributes
+### Reactive Props
 
-Pass initial state values as HTML attributes. The component's default state type determines how the attribute is coerced:
+Top-level variables define the component's state and public API. Attributes placed on the component tag (<my-cmp count="10">) are automatically synced to these signals.
 
+They are fully reactive: changing an attribute at runtime (via JS setAttribute or a parent framework) immediately updates the component's internal state.
+
+The initial value of your variable determines the type coercion:
+```ts
+// components/card.tsx
+var label = "Hello"      // String (default)
+var value = 0            // Number (parsed with +)
+var active = false       // Boolean (presence/absence)
+
+render = () =>
+  <div class={active ? "active" : ""}>
+    <h1>{label}: {value}</h1>
+  </div>
+```
+
+usage
 ```html
-<counter- count="10"></counter->     <!-- number: parsed with + -->
-<toggle- active="true"></toggle->    <!-- boolean: anything except "false" is true -->
-<greeting- name="world"></greeting-> <!-- string: used as-is -->
+<card- label="Score" value="100" active></card->
 ```
 
-```tsx
-// components/counter.tsx
-var count = 0                            // default value, also defines type
+runtime updates
+```js
+// In your console or script:
+const card = document.querySelector("card-")
 
-render = () => <p>{count}</p>
+// Updates the number signal, re-renders text
+card.setAttribute("value", "500")
+
+// Updates boolean signal, toggles class
+card.removeAttribute("active")
 ```
-
-When `<counter- count="10">` is used, the count signal starts at `10` instead of `0`.
 
 ### Lifecycle hooks
 
